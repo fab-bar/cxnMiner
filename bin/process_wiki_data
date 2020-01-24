@@ -1,0 +1,126 @@
+#!/usr/bin/env python3
+
+import argparse
+import functools
+import logging
+import logging.config
+import gzip
+import json
+
+from cxnminer.utils import wikiannotator
+
+
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description='Annotate a wikipedia dump.')
+    parser.add_argument('infile')
+    parser.add_argument('outfile')
+    parser.add_argument('config')
+    parser.add_argument('--logging_config', default=None)
+    args = parser.parse_args()
+
+
+    configuration = {"max_sent_len": 70}
+
+    loggingConfig = dict(
+            version = 1,
+            formatters = {
+                'f': {'format':
+                      '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'}
+            },
+            handlers = {
+                'h': {'class': 'logging.StreamHandler',
+                      'formatter': 'f',
+                      'level': logging.DEBUG},
+            },
+            root = {
+                'handlers': ['h'],
+                'level': logging.DEBUG,
+            }
+        )
+
+    try:
+        config = json.loads(args.config)
+    except json.JSONDecodeError:
+        with open(args.config) as config_file:
+            config = json.load(config_file)
+
+    configuration.update(config)
+
+    try:
+        config = json.loads(args.config)
+    except json.JSONDecodeError:
+        with open(args.config) as config_file:
+            config = json.load(config_file)
+
+    if args.logging_config is not None:
+
+        try:
+            logging_config = json.loads(args.logging_config)
+        except json.JSONDecodeError:
+            with open(args.logging_config) as config_file:
+                logging_config = json.load(config_file)
+
+        loggingConfig.update(logging_config)
+
+    logging.config.dictConfig(loggingConfig)
+    logger = logging.getLogger(__name__)
+
+
+    exclude_sections = configuration["exclude_sections"]
+    sent_len_threshold = configuration["max_sent_len"]
+
+    annotator = wikiannotator.Annotator.createAnnotator(configuration['annotator'], configuration['annotator_options'])
+
+    def sentence_filter(sent, article, section):
+        if len(sent) > sent_len_threshold:
+
+            logger.info("Skipped long (" + str(len(sent)) + ") sentence from " + article + "," + section + ":")
+            logger.info(" ".join(sent))
+
+            return True
+        else:
+            return False
+
+    def open_infile():
+
+        if args.infile.endswith(".gz"):
+            return gzip.open(args.infile, 'rt', encoding="utf-8")
+        else:
+            return open(args.infile, 'r', encoding="utf-8")
+
+    def open_outfile():
+
+        if args.outfile.endswith(".gz"):
+            return gzip.open(args.outfile, 'wt', encoding="utf-8")
+        else:
+            return open(args.outfile, 'w', encoding="utf-8")
+
+    article_count = 0
+
+    with open_infile() as infile:
+        with open_outfile() as outfile:
+
+            sent_id = 1
+
+            for line in infile:
+
+                article = json.loads(line)
+
+                article_count += 1
+                if article_count % 100 == 0:
+                    logging.info("Processed " + str(article_count) + " articles (" + article['title'] + ")")
+
+                for section_title, section_text in zip(article['section_titles'], article['section_texts']):
+                    if section_title not in exclude_sections:
+                      ## some basic handling of wikimedia markup
+                      section_text = section_text.replace("'''", "")
+                      section_text = section_text.replace("''", "")
+                      section_text = section_text.replace("===", "")
+
+                      sentences = annotator.annotate_text(section_text, article['title'] + "." + section_title,
+                              functools.partial(sentence_filter,
+                                  article=article['title'], section=section_title))
+                      for sentence in sentences:
+                          print(sentence.serialize(), file=outfile)

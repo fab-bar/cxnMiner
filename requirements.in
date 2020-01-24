@@ -1,3 +1,0 @@
-certifi==2018.8.24 # this is the version installed with python 3.5.3 by conda
-
-gensim
