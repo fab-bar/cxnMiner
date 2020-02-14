@@ -3,4 +3,7 @@ certifi==2018.8.24 # this is the version installed with python 3.5.3 by conda
 gensim
 https://github.com/explosion/spacy-models/releases/download/de_core_news_sm-2.2.0/de_core_news_sm-2.2.0.tar.gz#egg=de_core_news_sm
 
+tox
+tox-battery
+
 ipython
