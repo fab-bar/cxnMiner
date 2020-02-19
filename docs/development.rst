@@ -32,6 +32,12 @@ mentioned in requirements.txt are installed:
 
    pip-sync && pip install -e .
 
+Tests
+=====
+
+Tests are run using `pytest <https://docs.pytest.org>`_ with `tox
+<https://tox.readthedocs.io/>`_ handling tests for multiple python versions
+(3.5, 3.6, 3.7 and 3.8)
 
 Documentation
 =============
