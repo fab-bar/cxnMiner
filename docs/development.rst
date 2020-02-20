@@ -40,6 +40,20 @@ mentioned in requirements.txt are installed:
 
    pip-sync requirements-dev.txt && pip install -e .
 
+Makefile
+--------
+
+The development environment can be managed using `make`. The contained Makefile
+uses `Makefile.venv <https://github.com/sio/Makefile.venv/>`_ to create and
+update a virtual environment. The file contains the following targets:
+
+test
+  Run the :ref:`tests <tests>`.
+docs
+  Build the :ref:`documentation <docs>`.
+
+.. _tests:
+
 Tests
 =====
 
@@ -56,6 +70,8 @@ as well.
 Additionaly the environment `dev` uses the python version mainly used during
 development with the dependencies installed from requirements-dev.txt instead of
 requirements-test.txt.
+
+.. _docs:
 
 Documentation
 =============

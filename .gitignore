@@ -6,3 +6,5 @@ __pycache__/
 .tox
 
 docs/_build/
+
+Makefile.venv

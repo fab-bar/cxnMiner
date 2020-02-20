@@ -1,4 +1,5 @@
 .. mdinclude:: ../README.md
+   :end-line: 4
 
 .. toctree::
    :maxdepth: 1
