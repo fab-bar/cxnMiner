@@ -5,6 +5,9 @@ __pycache__/
 
 .tox
 
+.coverage
+.coverage_html
+
 docs/_build/
 
 Makefile.venv

@@ -15,7 +15,7 @@ class TokenPattern(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def get_pattern_list(self, features):
         """Generate the list of pattern when only features are used to represent elements."""
-        pass
+        pass # pragma: no cover
 
 
 class SNGram(Pattern):

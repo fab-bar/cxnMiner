@@ -10,6 +10,7 @@ catalogue==1.0.0          # via spacy
 certifi==2019.11.28       # via requests
 chardet==3.0.4            # via requests
 conllu==2.2.2
+coverage==5.0.3           # via pytest-cov
 cymem==2.0.3              # via preshed, spacy, thinc
 decopatch==1.4.7          # via pytest-cases
 idna==2.8                 # via requests
@@ -26,6 +27,7 @@ preshed==3.0.2            # via spacy, thinc
 py==1.8.1                 # via pytest
 pyparsing==2.4.6          # via packaging
 pytest-cases==1.12.2
+pytest-cov==2.8.1
 pytest==5.3.5
 requests==2.22.0          # via spacy
 six==1.14.0               # via makefun, packaging, pathlib2, pytest-cases

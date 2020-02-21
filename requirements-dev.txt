@@ -15,6 +15,7 @@ catalogue==1.0.0          # via spacy
 certifi==2019.11.28       # via requests
 chardet==3.0.4            # via requests
 conllu==2.2.2
+coverage==5.0.3           # via pytest-cov
 cymem==2.0.3              # via preshed, spacy, thinc
 https://github.com/explosion/spacy-models/releases/download/de_core_news_sm-2.2.0/de_core_news_sm-2.2.0.tar.gz#egg=de_core_news_sm
 decopatch==1.4.7          # via pytest-cases
@@ -48,6 +49,7 @@ py==1.8.1                 # via pytest, tox
 pygments==2.5.2           # via ipython
 pyparsing==2.4.6          # via packaging
 pytest-cases==1.12.2
+pytest-cov==2.8.1
 pytest==5.3.5
 python-dateutil==2.8.0    # via botocore
 requests==2.22.0          # via smart-open, spacy

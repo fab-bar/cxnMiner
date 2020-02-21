@@ -51,6 +51,10 @@ test
   Run the :ref:`tests <tests>`.
 docs
   Build the :ref:`documentation <docs>`.
+coverage
+  Create coverage reports for the :ref:`tests <tests>`. A `HTML report
+  <https://coverage.readthedocs.io/en/coverage-5.0.3/cmd.html#html-annotation>`_
+  is created in the folder .coverage_html.
 
 .. _tests:
 
@@ -70,6 +74,13 @@ as well.
 Additionaly the environment `dev` uses the python version mainly used during
 development with the dependencies installed from requirements-dev.txt instead of
 requirements-test.txt.
+
+Coverage reports are created using `pytest-cov
+<https://pytest-cov.readthedocs.io>`_.:
+
+.. code-block:: bash
+
+   pytest --cov=cxnminer
 
 .. _docs:
 

@@ -43,3 +43,7 @@ docs: requirements-docs.txt myvenv
 test: requirements-test.txt myvenv
 	$(VENV)/tox
 
+.PHONY: coverage
+coverage: requirements-test.txt myvenv
+	$(VENV)/pytest --cov=cxnminer
+	$(VENV)/coverage html -d .coverage_html

@@ -10,7 +10,7 @@ class PatternExtractor(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def extract_patterns(self, sentence):
-        pass
+        pass # pragma: no cover
 
 class SyntacticNGramExtractor(PatternExtractor):
     """Extracts non-continous sn-grams from a given sentence that are bottom-up subtrees."""
