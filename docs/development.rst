@@ -47,6 +47,8 @@ The development environment can be managed using `make`. The contained Makefile
 uses `Makefile.venv <https://github.com/sio/Makefile.venv/>`_ to create and
 update a virtual environment. The file contains the following targets:
 
+upgrade
+  Upgrade the dependencies (running the `pip-compile` commands with `--upgrade`).
 test
   Run the :ref:`tests <tests>`.
 docs

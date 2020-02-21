@@ -25,15 +25,21 @@ $(VENV)/$(MARKER).pipsync: requirements-dev.txt | venv piptools
 	touch $(VENV)/$(MARKER).pipsync
 
 requirements-dev.txt: setup.py requirements-dev.in requirements-test.in
-	$(VENV)/pip-compile setup.py requirements-dev.in requirements-test.in --output-file requirements-dev.txt
+	$(VENV)/pip-compile $(UPGRADE) setup.py requirements-dev.in requirements-test.in --output-file requirements-dev.txt
 
 requirements-test.txt: setup.py requirements-test.in | myvenv
-	$(VENV)/pip-compile setup.py requirements-test.in --output-file requirements-test.txt
+	$(VENV)/pip-compile $(UPGRADE) setup.py requirements-test.in --output-file requirements-test.txt
 
 requirements-docs.txt: setup.py requirements-docs.in | myvenv
-	$(VENV)/pip-compile requirements-docs.in --output-file requirements-docs.txt
+	$(VENV)/pip-compile $(UPGRADE) requirements-docs.in --output-file requirements-docs.txt
 
 #####
+
+.PHONY: upgrade
+upgrade:
+	 make UPGRADE=--upgrade \
+	-W requirements-dev.in -W requirements-test.in -W requirements-docs.in \
+	requirements-dev.txt requirements-test.txt requirements-docs.txt
 
 .PHONY: docs
 docs: requirements-docs.txt myvenv

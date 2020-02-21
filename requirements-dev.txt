@@ -8,9 +8,9 @@ appdirs==1.4.3            # via virtualenv
 attrs==19.3.0             # via pytest
 backcall==0.1.0           # via ipython
 blis==0.4.1               # via spacy, thinc
-boto3==1.12.2             # via smart-open
+boto3==1.12.4             # via smart-open
 boto==2.49.0              # via smart-open
-botocore==1.15.2          # via boto3, s3transfer
+botocore==1.15.4          # via boto3, s3transfer
 catalogue==1.0.0          # via spacy
 certifi==2019.11.28       # via requests
 chardet==3.0.4            # via requests
@@ -24,7 +24,7 @@ distlib==0.3.0            # via virtualenv
 docutils==0.15.2          # via botocore
 filelock==3.0.12          # via tox, virtualenv
 gensim==3.8.1
-idna==2.8                 # via requests
+idna==2.9                 # via requests
 importlib-metadata==1.5.0  # via catalogue, pluggy, pytest, tox, virtualenv
 importlib-resources==1.0.2  # via virtualenv
 ipython-genutils==0.2.0   # via traitlets
@@ -52,7 +52,7 @@ pytest-cases==1.12.2
 pytest-cov==2.8.1
 pytest==5.3.5
 python-dateutil==2.8.0    # via botocore
-requests==2.22.0          # via smart-open, spacy
+requests==2.23.0          # via smart-open, spacy
 s3transfer==0.3.3         # via boto3
 scipy==1.4.1              # via gensim
 six==1.14.0               # via gensim, makefun, packaging, pathlib2, prompt-toolkit, pytest-cases, python-dateutil, tox, traitlets, virtualenv
@@ -63,7 +63,7 @@ thinc==7.3.1              # via spacy
 toml==0.10.0              # via tox
 tox-battery==0.5.2
 tox==3.14.5
-tqdm==4.42.1              # via thinc
+tqdm==4.43.0              # via  thinc
 traitlets==4.3.3          # via ipython
 urllib3==1.25.8           # via botocore, requests
 virtualenv==20.0.4        # via tox
