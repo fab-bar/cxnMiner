@@ -186,7 +186,7 @@ test_data = {
 def conversion_function(tree):
 
     if tree.token['upostag'] == "NOUN":
-        return SNGram.Tree(dict(tree.token, **{'form': tree.token['deprel']}), [])
+        return SNGram.Tree(dict({'function': tree.token['deprel'], 'id': tree.token['id']}), [])
     else:
         return None
 
@@ -209,4 +209,4 @@ def case_simple_generator(sentence, min_max, conversion):
 def test_extract_ngrams_elements(case_data):
 
     sentence, extractor, expected = case_data.get()
-    assert set([str(pattern.get_pattern_list(['form'])[0]) for pattern in extractor.extract_patterns(sentence)]) == expected['ngrams']
+    assert set([str(pattern.get_pattern_list(['form', 'function'])[0]) for pattern in extractor.extract_patterns(sentence)]) == expected['ngrams']

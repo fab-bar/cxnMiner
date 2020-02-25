@@ -17,6 +17,30 @@ class TokenPattern(metaclass=abc.ABCMeta):
         """Generate the list of pattern when only features are used to represent elements."""
         pass # pragma: no cover
 
+class PatternElement:
+
+    def __init__(self, form, level=None, order_id=None):
+
+        self.form = form
+        self.level = level
+        self.order_id = order_id
+
+    def __repr__(self):
+
+        return "_".join([self.level, self.form])
+
+    def __str__(self):
+
+        return self.form
+
+    def __eq__(self, other):
+
+        return (
+            self.__class__ == other.__class__ and
+            self.form == other.form and
+            self.level == other.level and
+            self.order_id == other.order_id
+        )
 
 class SNGram(Pattern):
     """A syntactic n-gram is a subtree of a syntax tree with size n."""
@@ -83,7 +107,10 @@ class TokenSNGram(SNGram, TokenPattern):
 
         for feature, children in itertools.product(features, children_iter):
 
-            trees.append(SNGram.Tree(head.token[feature], children))
+            if feature in head.token:
+
+                trees.append(SNGram.Tree(
+                    PatternElement(head.token[feature], feature, order_id=head.token.get('id', None)), children))
 
         return trees
 
