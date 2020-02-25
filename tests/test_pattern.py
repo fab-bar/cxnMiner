@@ -3,7 +3,7 @@ from pytest_cases import cases_data, THIS_MODULE
 
 import conllu
 
-from cxnminer.pattern import TokenSNGram
+from cxnminer.pattern import PatternElement, TokenSNGram, SNGram
 
 def case_fox():
 
@@ -18,7 +18,18 @@ def case_fox():
 
     return TokenSNGram(conllu.parse_tree(data)[0]), {
         "length": 4,
-        "str": "fox [The, quick, brown]"}
+        "str": "fox [The, quick, brown]",
+        "repr": [
+            PatternElement('fox', 'form', 4),
+            SNGram.LEFT_BRACKET,
+            PatternElement('The', 'form', 1),
+            SNGram.COMMA,
+            PatternElement('quick', 'form', 2),
+            SNGram.COMMA,
+            PatternElement('brown', 'form', 3),
+            SNGram.RIGHT_BRACKET
+        ]
+    }
 
 
 def case_dog():
@@ -33,7 +44,18 @@ def case_dog():
 """
     return TokenSNGram(conllu.parse_tree(data)[0]), {
         "length": 4,
-        "str": "dog [over, the, lazy]"}
+        "str": "dog [over, the, lazy]",
+        "repr": [
+            PatternElement('dog', 'form', 9),
+            SNGram.LEFT_BRACKET,
+            PatternElement('over', 'form', 6),
+            SNGram.COMMA,
+            PatternElement('the', 'form', 7),
+            SNGram.COMMA,
+            PatternElement('lazy', 'form', 8),
+            SNGram.RIGHT_BRACKET
+        ]
+    }
 
 
 def case_jumps():
@@ -54,7 +76,32 @@ def case_jumps():
 """
     return TokenSNGram(conllu.parse_tree(data)[0]), {
         "length": 10,
-        "str": "jumps [fox [The, quick, brown], dog [over, the, lazy], .]"}
+        "str": "jumps [fox [The, quick, brown], dog [over, the, lazy], .]",
+        "repr": [
+            PatternElement('jumps', 'form', 5),
+            SNGram.LEFT_BRACKET,
+            PatternElement('fox', 'form', 4),
+            SNGram.LEFT_BRACKET,
+            PatternElement('The', 'form', 1),
+            SNGram.COMMA,
+            PatternElement('quick', 'form', 2),
+            SNGram.COMMA,
+            PatternElement('brown', 'form', 3),
+            SNGram.RIGHT_BRACKET,
+            SNGram.COMMA,
+            PatternElement('dog', 'form', 9),
+            SNGram.LEFT_BRACKET,
+            PatternElement('over', 'form', 6),
+            SNGram.COMMA,
+            PatternElement('the', 'form', 7),
+            SNGram.COMMA,
+            PatternElement('lazy', 'form', 8),
+            SNGram.RIGHT_BRACKET,
+            SNGram.COMMA,
+            PatternElement('.', 'form', 10),
+            SNGram.RIGHT_BRACKET
+        ]
+    }
 
 
 ## Examples from Grigori Sidorov (2013): Non-linear construction of n-grams in computational linguistics
@@ -72,7 +119,18 @@ def case_sidorov1():
 """
     return TokenSNGram(conllu.parse_tree(data)[0]), {
         "length": 5,
-        "str": "y di par [un, de]"}
+        "str": "y di par [un, de]",
+        "repr": [
+            PatternElement('y', 'form', 1),
+            PatternElement('di', 'form', 2),
+            PatternElement('par', 'form', 4),
+            SNGram.LEFT_BRACKET,
+            PatternElement('un', 'form', 3),
+            SNGram.COMMA,
+            PatternElement('de', 'form', 5),
+            SNGram.RIGHT_BRACKET
+        ]
+    }
 
 def case_sidorov2():
 
@@ -87,7 +145,19 @@ def case_sidorov2():
 """
     return TokenSNGram(conllu.parse_tree(data)[0]), {
         "length": 5,
-        "str": "y di [le, par, de_mala_gana]"}
+        "str": "y di [le, par, de_mala_gana]",
+        "repr": [
+            PatternElement('y', 'form', 1),
+            PatternElement('di', 'form', 3),
+            SNGram.LEFT_BRACKET,
+            PatternElement('le', 'form', 2),
+            SNGram.COMMA,
+            PatternElement('par', 'form', 4),
+            SNGram.COMMA,
+            PatternElement('de_mala_gana', 'form', 5),
+            SNGram.RIGHT_BRACKET
+        ]
+    }
 
 
 
@@ -105,6 +175,19 @@ def test_sngram_str(case_data):
 
     assert str(sngram.get_pattern_list(['form'])[0]) == expected['str']
 
+@cases_data(module=THIS_MODULE)
+def test_sngram_element_list(case_data):
+
+    sngram, expected = case_data.get()
+
+    assert sngram.get_pattern_list(['form'])[0].get_element_list() == expected['repr']
+
+@cases_data(module=THIS_MODULE)
+def test_sngram_from_element_list(case_data):
+
+    sngram, expected = case_data.get()
+
+    assert sngram.get_pattern_list(['form'])[0] == SNGram.from_element_list(expected['repr'])
 
 @cases_data(module=THIS_MODULE)
 @pytest.mark.parametrize("features", [(['form', 'upostag'])])
