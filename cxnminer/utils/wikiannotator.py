@@ -19,7 +19,7 @@ class Annotator(metaclass=abc.ABCMeta):
         Returns:
             sentences: List of annotated sentences as conllu.TokenList.
         """
-        pass
+        pass # pragma: no cover
 
     @staticmethod
     def createAnnotator(annotator_name, options):
@@ -56,11 +56,11 @@ class SpacyAnnotator(Annotator):
                                 ('lemma', token.lemma_),
                                 ('upostag', token.pos_),
                                 ('xpostag', token.tag_),
-                                ('feats', '_'),
+                                ('feats', None),
                                 ('head', token.head.i - sent[0].i + 1 if token.dep_ != "ROOT" else 0),
                                 ('deprel', token.dep_),
-                                ('deps', '_'),
-                                ('misc', '_')
+                                ('deps', None),
+                                ('misc', None)
                             ]
                         ))
 
