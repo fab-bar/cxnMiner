@@ -103,6 +103,72 @@ def case_jumps():
         ]
     }
 
+def case_jumps_phrases():
+
+    tree = SNGram.Tree(
+        {'form': 'jumps', 'id': 5},
+        [
+            SNGram.Tree(
+                {'form': 'nsubj', 'id': 4}, [],
+                SNGram.Tree({'form': 'fox', 'id': 4}, [
+                    SNGram.Tree({'form': 'The', 'id': 1}, []),
+                    SNGram.Tree({'form': 'quick', 'id': 2}, []),
+                    SNGram.Tree({'form': 'brown', 'id': 3}, []),
+                ])
+            ),
+            SNGram.Tree(
+                {'form': 'nmod', 'id': 9}, [],
+                SNGram.Tree({'form': 'dog', 'id': 9}, [
+                    SNGram.Tree({'form': 'over', 'id': 6}, []),
+                    SNGram.Tree({'form': 'the', 'id': 7}, []),
+                    SNGram.Tree({'form': 'lazy', 'id': 8}, []),
+                ])
+            ),
+            SNGram.Tree(
+                {'form': '.', 'id': 10}, []
+            )
+        ]
+    )
+
+    return TokenSNGram(tree), {
+        "length": 4,
+        "str": "jumps [nsubj, nmod, .]",
+        "repr": [
+            PatternElement('jumps', 'form', 5),
+            SNGram.LEFT_BRACKET,
+            PatternElement('nsubj', 'form', 4),
+            SNGram.COMMA,
+            PatternElement('nmod', 'form', 9),
+            SNGram.COMMA,
+            PatternElement('.', 'form', 10),
+            SNGram.RIGHT_BRACKET
+        ],
+        "repr_full": [
+            PatternElement('jumps', 'form', 5),
+            SNGram.LEFT_BRACKET,
+            PatternElement('fox', 'form', 4),
+            SNGram.LEFT_BRACKET,
+            PatternElement('The', 'form', 1),
+            SNGram.COMMA,
+            PatternElement('quick', 'form', 2),
+            SNGram.COMMA,
+            PatternElement('brown', 'form', 3),
+            SNGram.RIGHT_BRACKET,
+            SNGram.COMMA,
+            PatternElement('dog', 'form', 9),
+            SNGram.LEFT_BRACKET,
+            PatternElement('over', 'form', 6),
+            SNGram.COMMA,
+            PatternElement('the', 'form', 7),
+            SNGram.COMMA,
+            PatternElement('lazy', 'form', 8),
+            SNGram.RIGHT_BRACKET,
+            SNGram.COMMA,
+            PatternElement('.', 'form', 10),
+            SNGram.RIGHT_BRACKET
+        ]
+    }
+
 
 ## Examples from Grigori Sidorov (2013): Non-linear construction of n-grams in computational linguistics
 
@@ -196,3 +262,15 @@ def test_tsngram_pattern_list(case_data, features):
     sngram, expected = case_data.get()
 
     assert len(sngram.get_pattern_list(features)) == len(features)**sngram.length
+
+
+@cases_data(module=THIS_MODULE)
+@pytest.mark.parametrize("feature", ['form'])
+def test_tsngram_pattern_list(case_data, feature):
+
+    sngram, expected = case_data.get()
+
+    assert sngram.get_base_pattern(feature).get_element_list() == expected.get(
+        'repr_full',
+        expected['repr']
+    )

@@ -28,6 +28,14 @@ class SyntacticNGramExtractor(PatternExtractor):
         if path.length >= self.min_size and path.length <= self.max_size:
             patterns.append(path)
 
+    def _add_special_path(self, tree, still_open_paths, patterns):
+
+        if self.special_node_conversion is not None:
+            special_path = self.special_node_conversion(tree)
+            if special_path is not None:
+                special_path.orig_tree = tree
+                self._add_path(TokenSNGram(special_path), still_open_paths, patterns)
+
     def _get_bottom_up_subtrees(self, tree):
 
         still_open_paths = []
@@ -37,11 +45,8 @@ class SyntacticNGramExtractor(PatternExtractor):
         if not tree.children:
 
             self._add_path(TokenSNGram(tree), still_open_paths, patterns)
+            self._add_special_path(tree, still_open_paths, patterns)
 
-            if self.special_node_conversion is not None:
-                special_path = self.special_node_conversion(tree)
-                if special_path is not None:
-                    self._add_path(TokenSNGram(special_path), still_open_paths, patterns)
         else:
             for child in tree.children:
 
@@ -53,12 +58,9 @@ class SyntacticNGramExtractor(PatternExtractor):
             still_open_paths = []
             for open_path_iter in itertools.product(*open_paths):
                 open_path = TokenSNGram(SNGram.Tree(tree.token, open_path_iter))
-                self._add_path(open_path, still_open_paths, patterns)
 
-                if self.special_node_conversion is not None:
-                    special_path = self.special_node_conversion(tree)
-                    if special_path is not None:
-                        self._add_path(TokenSNGram(special_path), still_open_paths, patterns)
+                self._add_path(open_path, still_open_paths, patterns)
+                self._add_special_path(tree, still_open_paths, patterns)
 
         return still_open_paths, patterns
 

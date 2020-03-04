@@ -30,6 +30,11 @@ class TokenPattern(metaclass=abc.ABCMeta):
         """Generate the list of pattern when only features are used to represent elements."""
         pass # pragma: no cover
 
+    @abc.abstractmethod
+    def get_base_pattern(self, feature):
+        """Generate the pattern where only feature is used to represent elements."""
+        pass # pragma: no cover
+
 class PatternElement:
 
     def __init__(self, form, level=None, order_id=None):
@@ -60,10 +65,11 @@ class SNGram(Pattern):
 
     class Tree:
 
-        def __init__(self, token, children):
+        def __init__(self, token, children, orig_tree=None):
 
             self.token = token
             self.children = children
+            self.orig_tree = orig_tree
 
         def __eq__(self, other):
 
@@ -183,13 +189,15 @@ class SNGram(Pattern):
 
 class TokenSNGram(SNGram, TokenPattern):
 
-    def _map_tree(self, head, features):
+    def _map_tree(self, head, features, use_orig=False):
 
         trees = []
+        if use_orig and getattr(head, 'orig_tree', None) is not None:
+            head = head.orig_tree
 
         child_trees = []
         for child in head.children:
-            child_trees.append(self._map_tree(child, features))
+            child_trees.append(self._map_tree(child, features, use_orig))
 
         if child_trees:
             children_iter = itertools.product(*child_trees)
@@ -208,3 +216,13 @@ class TokenSNGram(SNGram, TokenPattern):
     def get_pattern_list(self, features=frozenset(['form'])):
 
         return [SNGram(tree) for tree in self._map_tree(self.tree, features)]
+
+    def get_base_pattern(self, feature='form'):
+
+        tree_list = self._map_tree(self.tree, [feature], use_orig=True)
+
+        ## make sure that only one pattern is returned
+        if len(tree_list) > 1:
+            raise RuntimeError("Created more than one pattern.") # pragma: no cover
+
+        return SNGram(tree_list[0])
