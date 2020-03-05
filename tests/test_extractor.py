@@ -28,6 +28,22 @@ test_sentences = conllu.parse(
 5   lazy    lazy   ADJ    JJ   Degree=Pos                  6   amod    _   _
 6   dog     dog    NOUN   NN   Number=Sing                 2   nmod    _   SpaceAfter=No
 7  .       .      PUNCT  .    _                           2   punct   _   _
+
+# text = The quick brown fox with the long tail jumps over the lazy dog.
+1   The     the    DET    DT   Definite=Def|PronType=Art   4   det     _   _
+2   quick   quick  ADJ    JJ   Degree=Pos                  4   amod    _   _
+3   brown   brown  ADJ    JJ   Degree=Pos                  4   amod    _   _
+4   fox     fox    NOUN   NN   Number=Sing                 9   nsubj   _   _
+5   with     with    ADP   IN   _                 8   case   _   _
+6   the     the    DET   DT   Definite=Def|PronType=Art    8   det   _   _
+7   long     long    ADJ   JJ   Degree=Pos                 8   amod   _   _
+8   tail     tail    NOUN   NN   Number=Sing                 4   nmod   _   _
+9   jumps   jump   VERB   VBZ  Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin   0   root    _   _
+10   over    over   ADP    IN   _                           13   case    _   _
+11   the     the    DET    DT   Definite=Def|PronType=Art   13   det     _   _
+12  lazy    lazy   ADJ    JJ   Degree=Pos                  13   amod    _   _
+13   dog     dog    NOUN   NN   Number=Sing                 9   nmod    _   SpaceAfter=No
+14  .       .      PUNCT  .    _                           9   punct   _   _
 """
 )
 
@@ -42,7 +58,8 @@ test_data = {
                 "the",
                 "lazy",
                 ".",
-            ])
+            ]),
+            "number": 7
         },
         "1_3_conversion_function": {
             "ngrams": set([
@@ -55,19 +72,23 @@ test_data = {
                 "lazy",
                 "nmod",
                 ".",
-            ])
+            ]),
+            "number": 9
         },
         "2_3_None": {
             "ngrams": set([]),
+            "number": 0
         },
         "2_3_conversion_function": {
             "ngrams": set([]),
+            "number": 0
         },
         "2_4_None": {
             "ngrams": set([
                 "fox [The, quick, brown]",
                 "dog [over, the, lazy]",
             ]),
+            "number": 2
         },
         "2_4_conversion_function": {
             "ngrams": set([
@@ -75,12 +96,14 @@ test_data = {
                 "dog [over, the, lazy]",
                 "jumps [nsubj, nmod, .]",
             ]),
+            "number": 3
         },
         "2_9_None": {
             "ngrams": set([
                 "fox [The, quick, brown]",
                 "dog [over, the, lazy]",
             ]),
+            "number": 2
         },
         "2_9_conversion_function": {
             "ngrams": set([
@@ -89,7 +112,8 @@ test_data = {
                 "jumps [fox [The, quick, brown], nmod, .]",
                 "jumps [nsubj, dog [over, the, lazy], .]",
                 "jumps [nsubj, nmod, .]",
-            ])
+            ]),
+            "number": 5
         },
         "2_10_None": {
             "ngrams": set([
@@ -97,6 +121,7 @@ test_data = {
                 "dog [over, the, lazy]",
                 "jumps [fox [The, quick, brown], dog [over, the, lazy], .]",
             ]),
+            "number": 3
         },
         "2_10_conversion_function": {
             "ngrams": set([
@@ -107,6 +132,7 @@ test_data = {
                 "jumps [nsubj, dog [over, the, lazy], .]",
                 "jumps [nsubj, nmod, .]",
             ]),
+            "number": 6
         },
     },
     "Foxes jump over the lazy dog.": {
@@ -117,7 +143,8 @@ test_data = {
                 "the",
                 "lazy",
                 ".",
-            ])
+            ]),
+            "number": 5
         },
         "1_3_conversion_function": {
             "ngrams": set([
@@ -128,18 +155,22 @@ test_data = {
                 "lazy",
                 "nmod",
                 ".",
-            ])
+            ]),
+            "number": 7
         },
         "2_3_None": {
             "ngrams": set([]),
+            "number": 0
         },
         "2_3_conversion_function": {
             "ngrams": set([]),
+            "number": 0
         },
         "2_4_None": {
             "ngrams": set([
                 "dog [over, the, lazy]",
             ]),
+            "number": 1
         },
         "2_4_conversion_function": {
             "ngrams": set([
@@ -147,12 +178,14 @@ test_data = {
                 "jump [Foxes, nmod, .]",
                 "jump [nsubj, nmod, .]",
             ]),
+            "number": 3
         },
         "2_9_None": {
             "ngrams": set([
                 "dog [over, the, lazy]",
                 "jump [Foxes, dog [over, the, lazy], .]",
             ]),
+            "number": 2
         },
         "2_9_conversion_function": {
             "ngrams": set([
@@ -161,13 +194,15 @@ test_data = {
                 "jump [nsubj, dog [over, the, lazy], .]",
                 "jump [Foxes, dog [over, the, lazy], .]",
                 "jump [nsubj, nmod, .]",
-            ])
+            ]),
+            "number": 5
         },
         "2_10_None": {
             "ngrams": set([
                 "dog [over, the, lazy]",
                 "jump [Foxes, dog [over, the, lazy], .]",
             ]),
+            "number": 2
         },
         "2_10_conversion_function": {
             "ngrams": set([
@@ -177,8 +212,108 @@ test_data = {
                 "jump [Foxes, dog [over, the, lazy], .]",
                 "jump [nsubj, nmod, .]",
             ]),
+            "number": 5
         },
-    }
+    },
+    "The quick brown fox with the long tail jumps over the lazy dog.": {
+        "1_3_None": {
+            "ngrams": set([
+                "The",
+                "quick",
+                "brown",
+                "with",
+                "the",
+                "long",
+                "over",
+                "the",
+                "lazy",
+                ".",
+            ]),
+            "number": 10
+        },
+        "1_3_conversion_function": {
+            "ngrams": set([
+                "The",
+                "quick",
+                "brown",
+                "nsubj",
+                "with",
+                "the",
+                "long",
+                "over",
+                "the",
+                "lazy",
+                "nmod",
+                ".",
+            ]),
+            ## nmod appears twice in the pattern list
+            ## ("dog [over, the, lazy]" and "tail [with, the, long]")
+            "number": 13
+        },
+        "2_3_None": {
+            "ngrams": set([]),
+            "number": 0
+        },
+        "2_3_conversion_function": {
+            "ngrams": set([]),
+            "number": 0
+        },
+        "2_4_None": {
+            "ngrams": set([
+                "tail [with, the, long]",
+                "dog [over, the, lazy]",
+            ]),
+            "number": 2
+        },
+        "2_4_conversion_function": {
+            "ngrams": set([
+                "tail [with, the, long]",
+                "dog [over, the, lazy]",
+                "jumps [nsubj, nmod, .]",
+            ]),
+            "number": 3
+        },
+        "2_9_None": {
+            "ngrams": set([
+                "tail [with, the, long]",
+                "fox [The, quick, brown, tail [with, the, long]]",
+                "dog [over, the, lazy]",
+            ]),
+            "number": 3
+        },
+        "2_9_conversion_function": {
+            "ngrams": set([
+                "tail [with, the, long]",
+                "fox [The, quick, brown, tail [with, the, long]]",
+                "dog [over, the, lazy]",
+                "jumps [nsubj, dog [over, the, lazy], .]",
+                "jumps [nsubj, nmod, .]",
+                "jumps [fox [The, quick, brown, nmod], nmod, .]",
+                "fox [The, quick, brown, nmod]",
+            ]),
+            "number": 7
+        },
+        "2_10_None": {
+            "ngrams": set([
+                "tail [with, the, long]",
+                "fox [The, quick, brown, tail [with, the, long]]",
+                "dog [over, the, lazy]",
+            ]),
+            "number": 3
+        },
+        "2_10_conversion_function": {
+            "ngrams": set([
+                "tail [with, the, long]",
+                "fox [The, quick, brown, tail [with, the, long]]",
+                "dog [over, the, lazy]",
+                "fox [The, quick, brown, nmod]",
+                "jumps [fox [The, quick, brown, nmod], nmod, .]",
+                "jumps [nsubj, dog [over, the, lazy], .]",
+                "jumps [nsubj, nmod, .]",
+            ]),
+            "number": 7
+        },
+    },
 }
 
 
@@ -203,6 +338,12 @@ def case_simple_generator(sentence, min_max, conversion):
             min_size=min_max[0], max_size=min_max[1], special_node_conversion=conversion),
         test_data[sentence.metadata['text']]["_".join([str(min_max[0]), str(min_max[1]), getattr(conversion, '__name__', 'None')])]
     )
+
+@cases_data(module=THIS_MODULE)
+def test_extract_ngrams_numbers(case_data):
+
+    sentence, extractor, expected = case_data.get()
+    assert len([str(pattern.get_pattern_list(['form', 'function'])[0]) for pattern in extractor.extract_patterns(sentence)]) == expected['number']
 
 
 @cases_data(module=THIS_MODULE)

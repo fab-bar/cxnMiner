@@ -66,5 +66,10 @@ class SyntacticNGramExtractor(PatternExtractor):
 
     def extract_patterns(self, sentence):
 
-        return self._get_bottom_up_subtrees(sentence.to_tree())[1]
+        unique_patterns = []
+        patterns = sorted(self._get_bottom_up_subtrees(sentence.to_tree())[1], key=lambda pattern: str(pattern))
+        for _, g in itertools.groupby(patterns, key=lambda pattern: str(pattern)):
+            unique_patterns.append(next(g))
+
+        return unique_patterns
 
