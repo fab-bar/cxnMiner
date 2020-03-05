@@ -8,12 +8,22 @@ from .pattern import TokenSNGram, SNGram
 
 class PatternExtractor(metaclass=abc.ABCMeta):
 
+    @classmethod
+    @abc.abstractmethod
+    def get_pattern_type(cls):
+        pass # pragma: no cover
+
     @abc.abstractmethod
     def extract_patterns(self, sentence):
         pass # pragma: no cover
 
 class SyntacticNGramExtractor(PatternExtractor):
     """Extracts non-continous sn-grams from a given sentence that are bottom-up subtrees."""
+
+
+    def get_pattern_type(cls):
+
+        return SNGram # pragma: no cover
 
     def __init__(self, min_size=2, max_size=6,
                  special_node_conversion=None):
