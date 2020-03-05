@@ -2,6 +2,7 @@ import abc
 import itertools
 
 import conllu
+import conllu.parser
 
 from .pattern import TokenSNGram, SNGram
 
@@ -77,7 +78,13 @@ class SyntacticNGramExtractor(PatternExtractor):
     def extract_patterns(self, sentence):
 
         unique_patterns = []
-        patterns = sorted(self._get_bottom_up_subtrees(sentence.to_tree())[1], key=lambda pattern: str(pattern))
+
+        try:
+            tree = sentence.to_tree()
+        except conllu.parser.ParseException:
+            return unique_patterns
+
+        patterns = sorted(self._get_bottom_up_subtrees(tree)[1], key=lambda pattern: str(pattern))
         for _, g in itertools.groupby(patterns, key=lambda pattern: str(pattern)):
             unique_patterns.append(next(g))
 

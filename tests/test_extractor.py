@@ -351,3 +351,15 @@ def test_extract_ngrams_elements(case_data):
 
     sentence, extractor, expected = case_data.get()
     assert set([str(pattern.get_pattern_list(['form', 'function'])[0]) for pattern in extractor.extract_patterns(sentence)]) == expected['ngrams']
+
+
+def test_sentence_that_is_not_parseable():
+
+    data = """
+# sent_id = Liste von Unternehmen mit Namensherkunftserkl<C3><A4>rungen.Fu<C3><9F>noten.1
+
+"""
+    extractor = SyntacticNGramExtractor()
+    assert extractor.extract_patterns(conllu.parse(data)[0]) == []
+
+
