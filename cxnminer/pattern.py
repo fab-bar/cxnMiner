@@ -45,11 +45,11 @@ class PatternElement:
 
     def __repr__(self):
 
-        return "_".join([self.level, self.form])
+        return "_".join([self.level, str(self.form)])
 
     def __str__(self):
 
-        return self.form
+        return str(self.form)
 
     def __eq__(self, other):
 
