@@ -353,6 +353,16 @@ def test_extract_ngrams_elements(case_data):
     assert set([str(pattern.get_pattern_list(['form', 'function'])[0]) for pattern in extractor.extract_patterns(sentence)]) == expected['ngrams']
 
 
+@cases_data(module=THIS_MODULE)
+def test_extracting_storing_all_paths(case_data):
+
+    sentence, extractor, expected = case_data.get()
+    extractor = SyntacticNGramExtractor(
+        min_size=extractor.min_size, max_size=extractor.max_size, special_node_conversion=extractor.special_node_conversion, max_open_path_size=None)
+    assert len([str(pattern.get_pattern_list(['form', 'function'])[0]) for pattern in extractor.extract_patterns(sentence)]) == expected['number']
+
+
+
 def test_sentence_that_is_not_parseable():
 
     data = """

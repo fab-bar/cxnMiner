@@ -27,15 +27,20 @@ class SyntacticNGramExtractor(PatternExtractor):
         return SNGram # pragma: no cover
 
     def __init__(self, min_size=2, max_size=6,
-                 special_node_conversion=None):
+                 special_node_conversion=None, max_open_path_size=0):
 
         self.min_size = min_size
         self.max_size = max_size
+        if max_open_path_size is not None:
+            self.max_open_path_size = max(max_open_path_size, max_size-1)
+        else:
+            self.max_open_path_size = None
         self.special_node_conversion = special_node_conversion
 
     def _add_path(self, path, still_open_paths, patterns):
 
-        still_open_paths.append(path.tree)
+        if self.max_open_path_size is None or path.length <= self.max_open_path_size:
+            still_open_paths.append(path.tree)
         if path.length >= self.min_size and path.length <= self.max_size:
             patterns.append(path)
 
