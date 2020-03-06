@@ -1,0 +1,120 @@
+#!/usr/bin/env python3
+
+import argparse
+import collections
+import itertools
+import json
+import logging
+import logging.config
+
+import conllu
+
+from cxnminer.pattern import SNGram
+from cxnminer.extractor import SyntacticNGramExtractor
+from cxnminer.pattern_encoder import BitEncoder
+from cxnminer.utils.helpers import open_file
+
+def conversion_function(tree):
+
+    if tree.token['upostag'] == "NOUN":
+        return SNGram.Tree(dict({'np_function': tree.token['deprel'], 'id': tree.token['id']}), [])
+    else:
+        return None
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('infile')
+    parser.add_argument('outfile_patterns')
+    parser.add_argument('outfile_base')
+    parser.add_argument('dictionaries')
+    parser.add_argument('word_level', type=str)
+    parser.add_argument('--max_pattern_size', type=int, default=4)
+    parser.add_argument('--base_dictionaries', default=None)
+    parser.add_argument('--logging_config', default=None)
+    args = parser.parse_args()
+
+    loggingConfig = dict(
+            version = 1,
+            formatters = {
+                'f': {'format':
+                      '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'}
+            },
+            handlers = {
+                'h': {'class': 'logging.StreamHandler',
+                      'formatter': 'f',
+                      'level': logging.DEBUG},
+            },
+            root = {
+                'handlers': ['h'],
+                'level': logging.DEBUG,
+            }
+        )
+
+    if args.logging_config is not None:
+
+        try:
+            logging_config = json.loads(args.logging_config)
+        except json.JSONDecodeError:
+            with open(args.logging_config) as config_file:
+                logging_config = json.load(config_file)
+
+        loggingConfig.update(logging_config)
+
+    logging.config.dictConfig(loggingConfig)
+    logger = logging.getLogger(__name__)
+
+    with open_file(args.dictionaries) as dict_file:
+        vocabularies = json.load(dict_file)
+
+    extractor = SyntacticNGramExtractor(max_size=args.max_pattern_size, special_node_conversion=conversion_function)
+
+    pattern_encoder = BitEncoder(vocabularies, extractor.get_pattern_type())
+    if args.base_dictionaries is not None:
+        with open_file(args.base_dictionaries) as base_dict_file:
+            base_vocabularies = json.load(dict_file)
+            word_encoder = BitEncoder({args.word_level: base_vocabularies[args.word_level]}, extractor.get_pattern_type())
+    else:
+        word_encoder = pattern_encoder
+
+    patterns = collections.defaultdict(set)
+    base_patterns = collections.defaultdict(list)
+    sentence_nr = 0
+
+    with open_file(args.infile) as infile:
+
+        for sentence in conllu.parse_incr(infile):
+
+            sentence_nr += 1
+            logger.info("Extract patterns from sentence {}, {}".format(
+                str(sentence_nr), sentence.metadata.get('sent_id', "no id")))
+
+            sentence_base_patterns = collections.defaultdict(list)
+
+            tpatterns = extractor.extract_patterns(sentence)
+
+            for tpattern in tpatterns:
+                base_pattern = tpattern.get_base_pattern(args.word_level)
+                base_pattern_encoded = word_encoder.encode(base_pattern)
+
+                base_pattern_positions = ",".join(
+                    [str(element) for element in tpattern.get_base_pattern('id').get_element_list()])
+
+                sentence_base_patterns[base_pattern_encoded].append(base_pattern_positions)
+
+                for pattern in tpattern.get_pattern_list(frozenset(['lemma', 'upostag', 'np_function'])):
+
+                    if pattern != base_pattern:
+                        patterns[pattern_encoder.encode(pattern)].add(base_pattern_encoded)
+
+            for encoded_base_pattern, positions in sentence_base_patterns.items():
+                for _, _ in itertools.groupby(sorted(positions)):
+                    base_patterns[encoded_base_pattern].append(sentence_nr)
+
+    for pattern in patterns.keys():
+        patterns[pattern] = list(patterns[pattern])
+    with open_file(args.outfile_patterns, 'w') as outfile:
+        json.dump(patterns, outfile)
+
+    with open_file(args.outfile_base, 'w') as outfile:
+        json.dump(base_patterns, outfile)
