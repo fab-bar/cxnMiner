@@ -25,6 +25,7 @@ if __name__ == "__main__":
     parser.add_argument('levels', type=str,
                         choices=FEATURE_EXTRACTORS.keys(),
                         nargs='+')
+    parser.add_argument('--drop_frequencies', action='store_true', default=False)
     args = parser.parse_args()
 
     vocabulary = {}
@@ -42,9 +43,10 @@ if __name__ == "__main__":
                 if value is not None:
                     vocabulary[level][value] += 1
 
-    for level in vocabulary:
+    if args.drop_frequencies:
+        for level in vocabulary:
 
-        vocabulary[level] = list(vocabulary[level].keys())
+            vocabulary[level] = list(vocabulary[level].keys())
 
 
     with open_file(args.outfile, 'w') as outfile:
