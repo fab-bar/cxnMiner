@@ -1,6 +1,9 @@
 import abc
 import math
 
+import bitarray
+import bitarray.util
+
 from cxnminer.pattern import PatternElement
 
 class PatternEncoder(metaclass=abc.ABCMeta):
@@ -132,4 +135,49 @@ class BitEncoder(PatternEncoder):
             encoded_pattern = encoded_pattern >> self.element_size
 
         pattern.reverse()
+        return self.pattern_type.from_element_list(pattern)
+
+
+class HuffmanEncoder(PatternEncoder):
+
+
+    def __init__(self, frequency_dictionaries, pattern_type, special_weight=1):
+
+        self.pattern_type = pattern_type
+
+        huffman_freq_dict = {}
+        max_freq = 0
+
+        for level, dict_ in frequency_dictionaries.items():
+            for word, freq in dict_.items():
+
+                if max_freq < freq:
+                    max_freq = freq
+
+                huffman_freq_dict[PatternElement(word, level)] = freq
+
+        special_frequency = max_freq*special_weight
+        for special_element in self.pattern_type.specialElements():
+            huffman_freq_dict[special_element] = special_frequency
+
+        self.huffman_dict = bitarray.util.huffman_code(huffman_freq_dict)
+
+    def _encode(self, pattern):
+
+        code = bitarray.bitarray()
+        code.encode(self.huffman_dict, pattern)
+        return code.unpack()
+
+
+    def encode(self, pattern):
+
+        return self._encode(pattern.get_element_list())
+
+
+    def decode(self, encoded_pattern):
+
+        encoded = bitarray.bitarray()
+        encoded.pack(encoded_pattern)
+        pattern = encoded.decode(self.huffman_dict)
+
         return self.pattern_type.from_element_list(pattern)

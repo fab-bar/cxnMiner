@@ -11,6 +11,7 @@ setup(
     cmdclass=versioneer.get_cmdclass(),
     packages=find_packages(),
     install_requires=[
+        'bitarray',
         'conllu',
         'spacy'
     ]

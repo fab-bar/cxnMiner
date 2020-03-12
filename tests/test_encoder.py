@@ -1,6 +1,6 @@
 import pytest
 
-from cxnminer.pattern_encoder import BitEncoder
+from cxnminer.pattern_encoder import BitEncoder, HuffmanEncoder
 from cxnminer.pattern import SNGram, PatternElement
 
 
@@ -130,3 +130,25 @@ def test_decode_unknown_not_set():
     with pytest.raises(ValueError):
         test_decoder.decode(encoded_pattern)
 
+
+@pytest.mark.parametrize("freq_dict", [
+    {'form': {'fox': 5, 'The': 10, 'quick': 3, 'brown': 8}}
+])
+def test_huffman_encode_decode(freq_dict):
+
+    test = HuffmanEncoder(freq_dict, SNGram)
+
+
+    pattern_list = [
+        PatternElement('fox', 'form'),
+        SNGram.LEFT_BRACKET,
+        PatternElement('The', 'form'),
+        SNGram.COMMA,
+        PatternElement('quick', 'form'),
+        SNGram.COMMA,
+        PatternElement('brown', 'form'),
+        SNGram.RIGHT_BRACKET
+    ]
+    expected_pattern = SNGram.from_element_list(pattern_list)
+
+    assert test.decode(test.encode(expected_pattern)) == expected_pattern

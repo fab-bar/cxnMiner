@@ -5,6 +5,7 @@
 #    pip-compile --output-file=requirements-test.txt requirements-test.in setup.py
 #
 attrs==19.3.0             # via pytest
+bitarray==1.2.1
 blis==0.4.1               # via spacy, thinc
 catalogue==1.0.0          # via spacy
 certifi==2019.11.28       # via requests

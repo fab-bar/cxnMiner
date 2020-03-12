@@ -60,6 +60,10 @@ class PatternElement:
             self.order_id == other.order_id
         )
 
+    def __hash__(self):
+
+        return hash(self.form + '_' + self.level)
+
 class SNGram(Pattern):
     """A syntactic n-gram is a subtree of a syntax tree with size n."""
 
