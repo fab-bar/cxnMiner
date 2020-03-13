@@ -22,6 +22,7 @@ class SyntacticNGramExtractor(PatternExtractor):
     """Extracts non-continous sn-grams from a given sentence that are bottom-up subtrees."""
 
 
+    @classmethod
     def get_pattern_type(cls):
 
         return SNGram # pragma: no cover
