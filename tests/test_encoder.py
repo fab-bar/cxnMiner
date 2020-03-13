@@ -1,6 +1,8 @@
+import io
+
 import pytest
 
-from cxnminer.pattern_encoder import BitEncoder, HuffmanEncoder
+from cxnminer.pattern_encoder import PatternEncoder, BitEncoder, HuffmanEncoder
 from cxnminer.pattern import SNGram, PatternElement
 
 
@@ -192,3 +194,28 @@ def test_huffman_append(freq_dict):
         pattern = test.append(pattern, test.encode_item(element))
 
     assert test.decode(pattern) == expected_pattern
+
+
+@pytest.mark.parametrize("encoder_class,args,test_stm", [
+    (
+        BitEncoder, {'dictionaries': {'form': set(['fox', 'The', 'quick', 'brown']), 'pos': set(['Noun'])}},
+        lambda orig, loaded: orig.dictionaries == loaded.dictionaries
+    ),
+    (
+        HuffmanEncoder, {'frequency_dictionaries': {'form': {'fox': 5, 'The': 10, 'quick': 3, 'brown': 8}}},
+        lambda orig, loaded: orig.huffman_dict == loaded.huffman_dict
+    ),
+])
+def test_save(encoder_class, args, test_stm):
+
+    output = io.BytesIO()
+
+    test = encoder_class(**args, pattern_type=SNGram)
+
+    test.save(output)
+    output.seek(0)
+    test_loaded = PatternEncoder.load(output)
+
+    output.close()
+
+    assert test_stm(test, test_loaded)

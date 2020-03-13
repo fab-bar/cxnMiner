@@ -1,5 +1,6 @@
 import abc
 import math
+import pickle
 
 import bitarray
 import bitarray.util
@@ -23,6 +24,27 @@ class PatternEncoder(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def append(self, encoded_pattern, encoded_item):
         pass # pragma: no cover
+
+
+    def save(self, file_):
+
+        pickle.dump(self.__class__, file_)
+        self._save(file_)
+
+    def _save(self, file_):
+
+        pickle.dump(self, file_)
+
+    @classmethod
+    def load(cls, file_):
+
+        cls_ = pickle.load(file_)
+        return cls_._load(file_)
+
+    @classmethod
+    def _load(cls, file_):
+
+        return pickle.load(file_)
 
 class BitEncoder(PatternEncoder):
     """Encode a Pattern as a bit string (integer).
@@ -220,3 +242,29 @@ class HuffmanEncoder(PatternEncoder):
         encoded.pack(encoded_pattern)
         encoded.pack(encoded_item)
         return encoded.unpack()
+
+
+    def _save(self, file_):
+
+        pickle.dump(self.pattern_type, file_)
+        for key, element in self.huffman_dict.items():
+            pickle.dump(key, file_)
+            pickle.dump(element, file_)
+
+    @classmethod
+    def _load(cls, file_):
+
+        pattern_type = pickle.load(file_)
+
+        encoder = cls({}, pattern_type)
+        huffman_dict = {}
+        while True:
+            try:
+                key = pickle.load(file_)
+                value = pickle.load(file_)
+                huffman_dict[key] = value
+            except EOFError:
+                break
+
+        encoder.huffman_dict = huffman_dict
+        return encoder
