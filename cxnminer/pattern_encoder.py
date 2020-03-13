@@ -9,11 +9,19 @@ from cxnminer.pattern import PatternElement
 class PatternEncoder(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
+    def encode_item(self, item):
+        pass # pragma: no cover
+
+    @abc.abstractmethod
     def encode(self, pattern):
         pass # pragma: no cover
 
     @abc.abstractmethod
     def decode(self, encoded_pattern):
+        pass # pragma: no cover
+
+    @abc.abstractmethod
+    def append(self, encoded_pattern, encoded_item):
         pass # pragma: no cover
 
 class BitEncoder(PatternEncoder):
@@ -68,6 +76,15 @@ class BitEncoder(PatternEncoder):
         self.element_size = math.floor(math.log(dict_size-1, 2) + 1)
 
 
+    def _int_2_bytes(self, number):
+
+        # https://docs.python.org/3/library/stdtypes.html#int.to_bytes
+        return number.to_bytes((number.bit_length() + 7) // 8, byteorder='little')
+
+    def _bytes_2_int(self, bytes_):
+
+        return int.from_bytes(bytes_, byteorder='little')
+
     def _get_word_for_id(self, word_id):
 
         if not hasattr(self, '_ids_2_words'):
@@ -87,36 +104,47 @@ class BitEncoder(PatternEncoder):
 
         return self._ids_2_words[word_id]
 
-    def _get_element_id(self, element):
+    def encode_item(self, item):
+
+        code = 0
 
         try:
-            return self.special_characters.index(element) + self.special_offset
+            code = self.special_characters.index(item) + self.special_offset
 
         except ValueError:
 
             try:
-                return self.dictionaries[element.level][element.form] + self.level_offsets[element.level]
+                code = self.dictionaries[item.level][item.form] + self.level_offsets[item.level]
             except KeyError:
 
                 if self.unknown is not None:
-                    return self.special_offset + len(self.special_characters)
+                    code = self.special_offset + len(self.special_characters)
                 else:
-                    raise ValueError("Element not in dictionary: " + str(element))
+                    raise ValueError("Element not in dictionary: " + str(item))
+
+        return self._int_2_bytes(code)
+
+    def append(self, encoded_pattern, encoded_item):
+
+        encoded_pattern = self._bytes_2_int(encoded_pattern)
+        encoded_item = self._bytes_2_int(encoded_item)
+        return self._int_2_bytes(encoded_pattern << self.element_size | encoded_item)
 
 
     def encode(self, pattern):
 
-        code = 0
+        code = b''
 
         pattern = pattern.get_element_list()
 
         for element in pattern:
-
-            code = code << self.element_size | self._get_element_id(element)
+            code = self.append(code, self.encode_item(element))
 
         return code
 
     def decode(self, encoded_pattern):
+
+        encoded_pattern = self._bytes_2_int(encoded_pattern)
 
         pattern = []
         element_size_int = 2**self.element_size - 1
@@ -169,6 +197,10 @@ class HuffmanEncoder(PatternEncoder):
         return code.unpack()
 
 
+    def encode_item(self, pattern_element):
+
+        return self._encode([pattern_element])
+
     def encode(self, pattern):
 
         return self._encode(pattern.get_element_list())
@@ -181,3 +213,10 @@ class HuffmanEncoder(PatternEncoder):
         pattern = encoded.decode(self.huffman_dict)
 
         return self.pattern_type.from_element_list(pattern)
+
+    def append(self, encoded_pattern, encoded_item):
+
+        encoded = bitarray.bitarray()
+        encoded.pack(encoded_pattern)
+        encoded.pack(encoded_item)
+        return encoded.unpack()

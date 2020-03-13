@@ -152,3 +152,43 @@ def test_huffman_encode_decode(freq_dict):
     expected_pattern = SNGram.from_element_list(pattern_list)
 
     assert test.decode(test.encode(expected_pattern)) == expected_pattern
+
+
+@pytest.mark.parametrize("freq_dict", [
+    {'form': {'fox': 5, 'The': 10, 'quick': 3, 'brown': 8}}
+])
+def test_huffman_encode_item(freq_dict):
+
+    test = HuffmanEncoder(freq_dict, SNGram)
+
+    element = PatternElement('fox', 'form')
+    expected_pattern = SNGram.from_element_list([element])
+
+    assert test.decode(test.encode_item(element)) == expected_pattern
+
+@pytest.mark.parametrize("freq_dict", [
+    {'form': {'fox': 5, 'The': 10, 'quick': 3, 'brown': 8}}
+])
+def test_huffman_append(freq_dict):
+
+    test = HuffmanEncoder(freq_dict, SNGram)
+
+    pattern_list = [
+        PatternElement('fox', 'form'),
+        SNGram.LEFT_BRACKET,
+        PatternElement('The', 'form'),
+        SNGram.COMMA,
+        PatternElement('quick', 'form'),
+        SNGram.COMMA,
+        PatternElement('brown', 'form'),
+        SNGram.RIGHT_BRACKET
+    ]
+    expected_pattern = SNGram.from_element_list(pattern_list)
+
+    print(test.huffman_dict)
+
+    pattern = b''
+    for element in pattern_list:
+        pattern = test.append(pattern, test.encode_item(element))
+
+    assert test.decode(pattern) == expected_pattern
