@@ -7,6 +7,10 @@ import bitarray.util
 
 from cxnminer.pattern import PatternElement
 
+class EncodeError(ValueError):
+
+    pass
+
 class PatternEncoder(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
@@ -159,7 +163,7 @@ class BitEncoder(PatternEncoder):
                 if self.unknown is not None:
                     code = self.special_offset + len(self.special_characters)
                 else:
-                    raise ValueError("Element not in dictionary: " + str(item))
+                    raise EncodeError("Element not in dictionary: " + str(item))
 
         return self._int_2_bytes(code)
 
@@ -248,7 +252,12 @@ class HuffmanEncoder(CombinablePatternEncoder):
     def _encode(self, pattern):
 
         code = bitarray.bitarray()
-        code.encode(self.huffman_dict, pattern)
+
+        try:
+            code.encode(self.huffman_dict, pattern)
+        except ValueError as e:
+            raise EncodeError(str(e))
+
         return self._bitarray_2_bytes(code)
 
     def encode_item(self, pattern_element):

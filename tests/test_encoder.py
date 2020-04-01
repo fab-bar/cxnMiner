@@ -2,7 +2,7 @@ import io
 
 import pytest
 
-from cxnminer.pattern_encoder import PatternEncoder, BitEncoder, HuffmanEncoder
+from cxnminer.pattern_encoder import PatternEncoder, BitEncoder, HuffmanEncoder, EncodeError
 from cxnminer.pattern import SNGram, PatternElement
 
 
@@ -105,7 +105,7 @@ def test_encode_unknown_not_set():
     ]
     pattern =  SNGram.from_element_list(pattern_list)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(EncodeError):
         test.encode(pattern)
 
 
@@ -171,6 +171,18 @@ def test_huffman_encode_item(freq_dict):
 @pytest.mark.parametrize("freq_dict", [
     {'form': {'fox': 5, 'The': 10, 'quick': 3, 'brown': 8}}
 ])
+def test_huffman_encode_unknown_item(freq_dict):
+
+    test = HuffmanEncoder(freq_dict, SNGram)
+
+    element = PatternElement('unknown', 'form')
+
+    with pytest.raises(EncodeError):
+        test.encode_item(element)
+
+@pytest.mark.parametrize("freq_dict", [
+    {'form': {'fox': 5, 'The': 10, 'quick': 3, 'brown': 8}}
+])
 def test_huffman_append(freq_dict):
 
     test = HuffmanEncoder(freq_dict, SNGram)
@@ -186,8 +198,6 @@ def test_huffman_append(freq_dict):
         SNGram.RIGHT_BRACKET
     ]
     expected_pattern = SNGram.from_element_list(pattern_list)
-
-    print(test.huffman_dict)
 
     pattern = b''
     for element in pattern_list:
