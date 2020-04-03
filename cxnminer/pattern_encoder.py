@@ -46,6 +46,32 @@ class PatternEncoder(metaclass=abc.ABCMeta):
 
         return pickle.load(file_)
 
+
+    ### helper methods
+    @classmethod
+    def _int_2_bytes(cls, number):
+
+        # https://docs.python.org/3/library/stdtypes.html#int.to_bytes
+        return number.to_bytes((number.bit_length() + 7) // 8, byteorder='little')
+
+    @classmethod
+    def _bytes_2_int(cls, bytes_):
+
+        return int.from_bytes(bytes_, byteorder='little')
+
+class CombinablePatternEncoder(PatternEncoder):
+    """A pattern encoder that creates combinable patterns.
+
+    Combinable means that elements can be appended to patterns without knowing
+    specifics of the instantiated encoder.
+
+    """
+
+    @classmethod
+    @abc.abstractmethod
+    def combine(cls, encoded_pattern, encoded_item):
+        pass # pragma: no cover
+
 class BitEncoder(PatternEncoder):
     """Encode a Pattern as a bit string (integer).
 
@@ -97,15 +123,6 @@ class BitEncoder(PatternEncoder):
             dict_size += 1
         self.element_size = math.floor(math.log(dict_size-1, 2) + 1)
 
-
-    def _int_2_bytes(self, number):
-
-        # https://docs.python.org/3/library/stdtypes.html#int.to_bytes
-        return number.to_bytes((number.bit_length() + 7) // 8, byteorder='little')
-
-    def _bytes_2_int(self, bytes_):
-
-        return int.from_bytes(bytes_, byteorder='little')
 
     def _get_word_for_id(self, word_id):
 
@@ -188,8 +205,14 @@ class BitEncoder(PatternEncoder):
         return self.pattern_type.from_element_list(pattern)
 
 
-class HuffmanEncoder(PatternEncoder):
+class HuffmanEncoder(CombinablePatternEncoder):
 
+
+    # a 1 that is prefixed to the bitarray before
+    # converting it to a byte representation of the
+    # encoded integer in order to avoid the loss of
+    # leading 0's
+    prefix = bitarray.bitarray('1')
 
     def __init__(self, frequency_dictionaries, pattern_type, special_weight=1):
 
@@ -212,12 +235,21 @@ class HuffmanEncoder(PatternEncoder):
 
         self.huffman_dict = bitarray.util.huffman_code(huffman_freq_dict)
 
+    @classmethod
+    def _bytes_2_bitarray(cls, bytes_):
+
+        return bitarray.util.int2ba(cls._bytes_2_int(bytes_))[cls.prefix.length():]
+
+    @classmethod
+    def _bitarray_2_bytes(cls, bitarray_):
+
+        return cls._int_2_bytes(bitarray.util.ba2int(cls.prefix + bitarray_))
+
     def _encode(self, pattern):
 
         code = bitarray.bitarray()
         code.encode(self.huffman_dict, pattern)
-        return code.unpack()
-
+        return self._bitarray_2_bytes(code)
 
     def encode_item(self, pattern_element):
 
@@ -230,18 +262,22 @@ class HuffmanEncoder(PatternEncoder):
 
     def decode(self, encoded_pattern):
 
-        encoded = bitarray.bitarray()
-        encoded.pack(encoded_pattern)
+        encoded = self._bytes_2_bitarray(encoded_pattern)
         pattern = encoded.decode(self.huffman_dict)
 
         return self.pattern_type.from_element_list(pattern)
 
     def append(self, encoded_pattern, encoded_item):
 
-        encoded = bitarray.bitarray()
-        encoded.pack(encoded_pattern)
-        encoded.pack(encoded_item)
-        return encoded.unpack()
+        return self.combine(encoded_pattern, encoded_item)
+
+    @classmethod
+    def combine(cls, encoded_pattern, encoded_item):
+
+        encoded = cls._bytes_2_bitarray(encoded_pattern)
+        encoded.extend(cls._bytes_2_bitarray(encoded_item))
+
+        return cls._bitarray_2_bytes(encoded)
 
 
     def _save(self, file_):
