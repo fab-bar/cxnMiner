@@ -1,4 +1,5 @@
 import abc
+import base64
 import math
 import pickle
 
@@ -75,6 +76,56 @@ class CombinablePatternEncoder(PatternEncoder):
     @abc.abstractmethod
     def combine(cls, encoded_pattern, encoded_item):
         pass # pragma: no cover
+
+
+class Base64Encoder(PatternEncoder):
+
+    def __init__(self, encoder, binary=True):
+
+        self.encoder = encoder
+        self.binary = binary
+
+    def _b64encode(self, pattern):
+
+        encoded = base64.b64encode(pattern)
+        if self.binary:
+            return encoded
+        else:
+            return encoded.decode('ascii')
+
+    def _b64decode(self, pattern):
+
+        return base64.b64decode(pattern)
+
+    def encode_item(self, item):
+
+        return self._b64encode(self.encoder.encode_item(item))
+
+    def encode(self, pattern):
+
+        return self._b64encode(self.encoder.encode(pattern))
+
+    def decode(self, encoded_pattern):
+
+        return self.encoder.decode(self._b64decode(encoded_pattern))
+
+    def append(self, encoded_pattern, encoded_item):
+
+        return self._b64encode(
+            self.encoder.append(self._b64decode(encoded_pattern),
+                                self._b64decode(encoded_item)))
+
+    def _save(self, file_):
+
+        pickle.dump(self.binary, file_)
+        self.encoder.save(file_)
+
+    @classmethod
+    def _load(cls, file_):
+
+        binary = pickle.load(file_)
+        return Base64Encoder(PatternEncoder.load(file_), binary=binary)
+
 
 class BitEncoder(PatternEncoder):
     """Encode a Pattern as a bit string (integer).

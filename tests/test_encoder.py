@@ -2,7 +2,7 @@ import io
 
 import pytest
 
-from cxnminer.pattern_encoder import PatternEncoder, BitEncoder, HuffmanEncoder, EncodeError
+from cxnminer.pattern_encoder import PatternEncoder, Base64Encoder, BitEncoder, HuffmanEncoder, EncodeError
 from cxnminer.pattern import SNGram, PatternElement
 
 
@@ -20,27 +20,6 @@ def test_bit_size_8():
 
     test = BitEncoder({'form': set(['a', 'b', 'c']), 'function': set(['a', 'b'])}, SNGram)
     assert test.element_size == 4
-
-@pytest.mark.parametrize("encoder_dict", [
-    {'form': {'fox': 0, 'The': 2, 'quick': 1, 'brown': 3}},
-    {'form': set(['fox', 'The', 'quick', 'brown'])}
-])
-def test_encode_decode(encoder_dict):
-
-    test = BitEncoder(encoder_dict, SNGram)
-    pattern =  SNGram.from_element_list([
-        PatternElement('fox', 'form'),
-        SNGram.LEFT_BRACKET,
-        PatternElement('The', 'form'),
-        SNGram.COMMA,
-        PatternElement('quick', 'form'),
-        SNGram.COMMA,
-        PatternElement('brown', 'form'),
-        SNGram.RIGHT_BRACKET
-    ])
-
-    assert test.decode(test.encode(pattern)) == pattern
-
 
 @pytest.mark.parametrize("encoder_dict", [
     {'form': {'fox': 0, 'The': 2, 'quick': 1, 'brown': 3}, 'pos': {'Noun': 0}},
@@ -136,41 +115,6 @@ def test_decode_unknown_not_set():
 @pytest.mark.parametrize("freq_dict", [
     {'form': {'fox': 5, 'The': 10, 'quick': 3, 'brown': 8}}
 ])
-def test_huffman_encode_decode(freq_dict):
-
-    test = HuffmanEncoder(freq_dict, SNGram)
-
-
-    pattern_list = [
-        PatternElement('fox', 'form'),
-        SNGram.LEFT_BRACKET,
-        PatternElement('The', 'form'),
-        SNGram.COMMA,
-        PatternElement('quick', 'form'),
-        SNGram.COMMA,
-        PatternElement('brown', 'form'),
-        SNGram.RIGHT_BRACKET
-    ]
-    expected_pattern = SNGram.from_element_list(pattern_list)
-
-    assert test.decode(test.encode(expected_pattern)) == expected_pattern
-
-
-@pytest.mark.parametrize("freq_dict", [
-    {'form': {'fox': 5, 'The': 10, 'quick': 3, 'brown': 8}}
-])
-def test_huffman_encode_item(freq_dict):
-
-    test = HuffmanEncoder(freq_dict, SNGram)
-
-    element = PatternElement('fox', 'form')
-    expected_pattern = SNGram.from_element_list([element])
-
-    assert test.decode(test.encode_item(element)) == expected_pattern
-
-@pytest.mark.parametrize("freq_dict", [
-    {'form': {'fox': 5, 'The': 10, 'quick': 3, 'brown': 8}}
-])
 def test_huffman_encode_unknown_item(freq_dict):
 
     test = HuffmanEncoder(freq_dict, SNGram)
@@ -180,12 +124,44 @@ def test_huffman_encode_unknown_item(freq_dict):
     with pytest.raises(EncodeError):
         test.encode_item(element)
 
-@pytest.mark.parametrize("freq_dict", [
-    {'form': {'fox': 5, 'The': 10, 'quick': 3, 'brown': 8}}
-])
-def test_huffman_append(freq_dict):
 
-    test = HuffmanEncoder(freq_dict, SNGram)
+### encoders to test
+encoder = [
+    BitEncoder({'form': {'fox': 0, 'The': 2, 'quick': 1, 'brown': 3}}, SNGram),
+    BitEncoder({'form': set(['fox', 'The', 'quick', 'brown'])}, SNGram),
+    HuffmanEncoder({'form': {'fox': 5, 'The': 10, 'quick': 3, 'brown': 8}}, SNGram),
+    Base64Encoder(HuffmanEncoder({'form': {'fox': 5, 'The': 10, 'quick': 3, 'brown': 8}}, SNGram)),
+    Base64Encoder(HuffmanEncoder({'form': {'fox': 5, 'The': 10, 'quick': 3, 'brown': 8}}, SNGram), binary=False)
+]
+
+@pytest.mark.parametrize("encoder", encoder)
+def test_encode_decode(encoder):
+
+    pattern =  SNGram.from_element_list([
+        PatternElement('fox', 'form'),
+        SNGram.LEFT_BRACKET,
+        PatternElement('The', 'form'),
+        SNGram.COMMA,
+        PatternElement('quick', 'form'),
+        SNGram.COMMA,
+        PatternElement('brown', 'form'),
+        SNGram.RIGHT_BRACKET
+    ])
+
+    assert encoder.decode(encoder.encode(pattern)) == pattern
+
+
+@pytest.mark.parametrize("encoder", encoder)
+def test_encode_item(encoder):
+
+    element = PatternElement('fox', 'form')
+    expected_pattern = SNGram.from_element_list([element])
+
+    assert encoder.decode(encoder.encode_item(element)) == expected_pattern
+
+
+@pytest.mark.parametrize("encoder", encoder)
+def test_append(encoder):
 
     pattern_list = [
         PatternElement('fox', 'form'),
@@ -201,31 +177,27 @@ def test_huffman_append(freq_dict):
 
     pattern = b''
     for element in pattern_list:
-        pattern = test.append(pattern, test.encode_item(element))
+        pattern = encoder.append(pattern, encoder.encode_item(element))
 
-    assert test.decode(pattern) == expected_pattern
+    assert encoder.decode(pattern) == expected_pattern
 
 
-@pytest.mark.parametrize("encoder_class,args,test_stm", [
-    (
-        BitEncoder, {'dictionaries': {'form': set(['fox', 'The', 'quick', 'brown']), 'pos': set(['Noun'])}},
-        lambda orig, loaded: orig.dictionaries == loaded.dictionaries
-    ),
-    (
-        HuffmanEncoder, {'frequency_dictionaries': {'form': {'fox': 5, 'The': 10, 'quick': 3, 'brown': 8}}},
-        lambda orig, loaded: orig.huffman_dict == loaded.huffman_dict
-    ),
-])
-def test_save(encoder_class, args, test_stm):
+comparison_function = {
+    BitEncoder: lambda orig, loaded: orig.dictionaries == loaded.dictionaries,
+    HuffmanEncoder: lambda orig, loaded: orig.huffman_dict == loaded.huffman_dict,
+    Base64Encoder:lambda orig, loaded: (orig.binary == loaded.binary) and (
+        comparison_function[orig.encoder.__class__](orig.encoder, loaded.encoder))
+}
+
+@pytest.mark.parametrize("encoder", encoder)
+def test_save(encoder):
 
     output = io.BytesIO()
 
-    test = encoder_class(**args, pattern_type=SNGram)
-
-    test.save(output)
+    encoder.save(output)
     output.seek(0)
-    test_loaded = PatternEncoder.load(output)
+    encoder_loaded = PatternEncoder.load(output)
 
     output.close()
 
-    assert test_stm(test, test_loaded)
+    assert comparison_function[encoder.__class__](encoder, encoder_loaded)
