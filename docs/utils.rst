@@ -1,32 +1,39 @@
-Corpus preparation
-==================
+Data preparation
+================
 
 *cxnMiner* takes an annotated corpus in
 `CoNNL-U format <https://universaldependencies.org/format.html>`_ as input.
 
-Annotate Wikipedia dumps
-------------------------
+Download and annotate Wikipedia dumps
+-------------------
 
-The package comes with a tool to annotate text that comes in a json format as
-the script `segment_wiki
-<https://radimrehurek.com/gensim/scripts/segment_wiki.html>`_ creates from a
-wikipedia dump. The output of the tool is in CoNNL-U format as expected for
-construction induction.
+*cxnMiner* uses an annotated corpus to automatically identify constructions.
+One example for a text collection that can be used is Wikipedia.
+The following commands retrieve the latest German Wikipedia dump and then extract the texts using
+`segment_wiki <https://radimrehurek.com/gensim/scripts/segment_wiki.html>`_ 
+
+.. code-block:: bash
+
+  wget -P data/ https://dumps.wikimedia.org/dewiki/latest/dewiki-latest-pages-articles.xml.bz2
+  python -m gensim.scripts.segment_wiki -f data/dewiki-latest-pages-articles.xml.bz2 -o data/dewiki-latest.json.gz
+
+The package *cxnminer* comes with a tool to annotate the text in the format that is output by :code:`segement_wiki`.
+The output of the tool is in CoNNL-U format as expected for construction mining.
 
 Call this script using:
 
 .. code-block:: bash
 
-  bin/process_wiki_data input_file output_file '{"annotator": "spacy", "annotator_options": {"model_name": "de_core_news_sm"}, "exclude_sections": ["Literatur", "Weblinks", "Einzelnachweise"], "max_sent_len": 70}' --logging_config='{"handlers": { "h":{ "level": "DEBUG", "class": "logging.FileHandler", "filename": "data/logs/dewiki-20191001-annotation.txt", "mode": "w", "formatter": "f"}}}'"
+  bin/process_wiki_data infile outfile '{"annotator": "spacy", "annotator_options": {"model_name": "de_core_news_sm"}, "exclude_sections": ["Literatur", "Weblinks", "Einzelnachweise"], "max_sent_len": 70}' --logging_config='{"handlers": { "h":{ "level": "DEBUG", "class": "logging.FileHandler", "filename": "logfile.txt", "mode": "w", "formatter": "f"}}}'"
 
 Options
 ~~~~~~~
 
-input_data
+infile
   The name of the file that contains the text in a json format.
   If the filename ends with ".gz" it is assumed to be a compressed file, otherwise it is assumed to be plain text json.
 
-output_file
+outfile
   The name of the file that is created by the script (if it exists, it will be overwritten).
   It will contain the annotated corpus in CoNNL-U format. If the filename ends with ".gz" the file will be compressed.
 
@@ -57,3 +64,173 @@ spacy
      current environment (See the `spacy documentaiton
      <https://spacy.io/usage/models>`_ for more information on installing
      models).
+
+Encode data
+-----------
+
+For the extraction of constructions, the constructions need to be encoded efficiently.
+The package comes with different encoders:
+
+BitEncoder
+  Encodes constructions using fixed length encodings for individual symbols.
+HuffmanEncoder
+  Encodes constructions using `Huffman coding <https://en.wikipedia.org/wiki/Huffman_coding>`_.
+Base64Encoder
+  This is not an encoder for constructions in it's own but takes the output of
+  another encoder and encodes it using `Base64 <https://en.wikipedia.org/wiki/Base64>`_
+  in order to enable writing the encoded patterns in text files.
+
+Extract dictionary
+~~~~~~~~~~~~~~~~~~
+
+Extract a dictionary of possible pattern elements to create an encoder.
+
+.. code-block:: bash
+
+  bin/extract_vocabulary infile outfile lemma upostag
+
+Options
++++++++
+
+infile
+  The name of the file that contains the annotated corpus in CoNLL-U format.
+  If the filename ends with ".gz" it is assumed to be a compressed file.
+
+outfile
+  The name of the file that is created by the script (if it exists, it will be overwritten).
+  It will contain the vocabulary for the given levels in json format.
+  If the filename ends with ".gz" the file will be compressed.
+
+levels
+  A list of levels from which the vocabulary is extracted.
+
+   form
+     the plain form of the token
+   lemma
+     the lemma
+   upostag
+     the universal part-of-speech tag
+   xpostag
+     the language specific part-of-speech tag
+   np_function
+     the dependency relation for tokens with the `upostag` `NOUN`
+
+--drop_frequencies
+  The list can contain the frequencies (needed to create a `Huffman encoder`) or they can optionally be dropped.
+
+
+Filter dictionary
+~~~~~~~~~~~~~~~~~
+
+Remove items with a frequency below a given threshold from an extracted dictionary.
+
+.. code-block:: bash
+
+  bin/filter_vocabulary dictionaries outfile min_frequency
+
+Options
++++++++
+
+dictionaries
+  The name of the file that contains the dictionary (including frequencies) extracted from the corpus.
+  If the filename ends with ".gz" it is assumed to be a compressed file.
+
+outfile
+  The name of the file that is created by the script (if it exists, it will be overwritten).
+  It will contain the filtered vocabulary json format.
+  If the filename ends with ".gz" the file will be compressed.
+
+min_frequency
+  Items with a lower frequency will be dropped from the dictionary.
+
+Prepare encoder
+~~~~~~~~~~~~~~~
+
+Create and pickle an encoder based on an extracted dictionary.
+
+.. code-block:: bash
+
+  bin/create_encoder dictionaries outfile
+
+Options
++++++++
+
+dictionaries
+  The name of the file that contains the dictionary extracted from the corpus.
+  If the filename ends with ".gz" it is assumed to be a compressed file.
+
+outfile
+  The pickled encoder.
+  If the filename ends with ".gz" the file will be compressed.
+
+--no_unknown
+  If this flag is set, the encoder will not handle unknown items but throw an error.
+  Otherwise "__unknown__" is used for unknown items.
+
+Encode dictionary
+~~~~~~~~~~~~~~~~~
+
+Encodes the complete dictionary - creating a dictionary that can be used
+to encode the corpus using lookup.
+
+.. code-block:: bash
+
+  bin/encode_vocabulary infile outfile encoder
+
+Options
++++++++
+
+infile
+  The name of the file that contains the dictionary extracted from the corpus.
+  If the filename ends with ".gz" it is assumed to be a compressed file.
+
+outfile
+  The name of the file that is created by the script (if it exists, it will be overwritten).
+  It will contain a lookup table for the vocabulary and the encoded versions in json format.
+  If the filename ends with ".gz" the file will be compressed.
+
+encoder
+  The pickled encoder.
+
+--no_frequencies
+  Add this flag if the dictionary does not contain frequencies.
+
+--loging_config
+  See above.
+
+Encode corpus
+~~~~~~~~~~~~~
+
+To make the pattern extraction more efficient, the corpus can be pre-encoded.
+Uses an encoded dicitionary to efficiently encode the corpus.
+
+.. code-block:: bash
+
+  bin/encode_corpus infile outfile dictionary lemma upostag
+
+Options
++++++++
+
+infile
+  The name of the file that contains the annotated corpus in CoNLL-U format.
+  If the filename ends with ".gz" it is assumed to be a compressed file.
+
+outfile
+  The name of the file that is created by the script (if it exists, it will be overwritten).
+  It will contain the annotated corpus in CoNNL-U format with encoded levels.
+  If the filename ends with ".gz" the file will be compressed.
+
+dictionary
+  The encoded dictionary.
+
+levels
+  The levels to be encoded -- see above.
+
+--encoder_file
+  If an encoder is given, its value for unknown is used for tokens not in the dictionary.
+  
+--processes
+  Controls the number of processes to be used.
+
+--loging_config
+  See above.
