@@ -11,8 +11,12 @@ setup(
     cmdclass=versioneer.get_cmdclass(),
     packages=find_packages(),
     install_requires=[
+        'click',
         'bitarray',
         'conllu',
         'spacy'
-    ]
+    ],
+    entry_points={
+        'console_scripts': ['cxnminer = cxnminer.cli:main']
+    }
 )

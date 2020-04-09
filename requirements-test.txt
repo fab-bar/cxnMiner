@@ -10,6 +10,7 @@ blis==0.4.1               # via spacy, thinc
 catalogue==1.0.0          # via spacy, thinc
 certifi==2020.4.5.1       # via requests
 chardet==3.0.4            # via requests
+click==7.1.2              # via cxnMiner (setup.py)
 conllu==2.3.2             # via cxnMiner (setup.py)
 coverage==5.1             # via pytest-cov
 cymem==2.0.3              # via preshed, spacy, thinc
