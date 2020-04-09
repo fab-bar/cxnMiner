@@ -57,6 +57,9 @@ coverage
   Create coverage reports for the :ref:`tests <tests>`. A `HTML report
   <https://coverage.readthedocs.io/en/coverage-5.0.3/cmd.html#html-annotation>`_
   is created in the folder .coverage_html.
+badges
+  Create/ Update the badges for the :ref:`documentation <docs>`
+  (prerequisite of the target `docs`).
 
 .. _tests:
 
@@ -103,3 +106,7 @@ To create the documentation run:
 .. code-block:: bash
            
    tox -e docs
+
+The README file contains badges that are created using `pybadges
+<https://github.com/google/pybadges>`_ and `coverage-badge
+<https://github.com/dbrgn/coverage-badge>`_.

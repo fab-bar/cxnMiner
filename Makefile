@@ -42,7 +42,7 @@ upgrade:
 	requirements-dev.txt requirements-test.txt requirements-docs.txt
 
 .PHONY: docs
-docs: requirements-docs.txt myvenv
+docs: requirements-docs.txt badges myvenv
 	$(VENV)/tox -e docs
 
 .PHONY: test
@@ -53,3 +53,8 @@ test: requirements-test.txt myvenv
 coverage: requirements-test.txt myvenv
 	$(VENV)/pytest --cov=cxnminer
 	$(VENV)/coverage html -d .coverage_html
+
+.PHONY: badges
+badges: coverage myvenv
+	$(VENV)/python -m pybadges --left-text=license --right-text=MIT > _static/license.svg
+	$(VENV)/coverage-badge -fo _static/coverage.svg

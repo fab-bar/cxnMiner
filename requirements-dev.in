@@ -4,4 +4,7 @@ https://github.com/explosion/spacy-models/releases/download/de_core_news_sm-2.2.
 tox
 tox-battery
 
+pybadges
+coverage-badge
+
 ipython
