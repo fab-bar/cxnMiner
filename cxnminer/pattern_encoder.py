@@ -43,11 +43,17 @@ class PatternEncoder(metaclass=abc.ABCMeta):
     @classmethod
     def load(cls, file_):
 
-        cls_ = pickle.load(file_)
+        cls_ = cls.get_saved_encoder_class(file_)
         return cls_._load(file_)
 
     @classmethod
     def _load(cls, file_):
+
+        return pickle.load(file_)
+
+
+    @classmethod
+    def get_saved_encoder_class(cls, file_):
 
         return pickle.load(file_)
 
@@ -85,35 +91,37 @@ class Base64Encoder(PatternEncoder):
         self.encoder = encoder
         self.binary = binary
 
-    def _b64encode(self, pattern):
+    @classmethod
+    def b64encode(cls, pattern, binary=True):
 
         encoded = base64.b64encode(pattern)
-        if self.binary:
+        if binary:
             return encoded
         else:
             return encoded.decode('ascii')
 
-    def _b64decode(self, pattern):
+    @classmethod
+    def b64decode(cls, pattern):
 
         return base64.b64decode(pattern)
 
     def encode_item(self, item):
 
-        return self._b64encode(self.encoder.encode_item(item))
+        return self.b64encode(self.encoder.encode_item(item), self.binary)
 
     def encode(self, pattern):
 
-        return self._b64encode(self.encoder.encode(pattern))
+        return self.b64encode(self.encoder.encode(pattern), self.binary)
 
     def decode(self, encoded_pattern):
 
-        return self.encoder.decode(self._b64decode(encoded_pattern))
+        return self.encoder.decode(self.b64decode(encoded_pattern))
 
     def append(self, encoded_pattern, encoded_item):
 
-        return self._b64encode(
-            self.encoder.append(self._b64decode(encoded_pattern),
-                                self._b64decode(encoded_item)))
+        return self.b64encode(
+            self.encoder.append(self.b64decode(encoded_pattern),
+                                self.b64decode(encoded_item)), self.binary)
 
     def _save(self, file_):
 
