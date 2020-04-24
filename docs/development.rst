@@ -65,7 +65,7 @@ Tests
 
 Tests are run using `pytest <https://docs.pytest.org>`_ with `tox
 <https://tox.readthedocs.io/>`_ handling tests for multiple python versions
-(3.5, 3.6, 3.7 and 3.8). The requirements that are used when running the tests,
+(3.6, 3.7 and 3.8). The requirements that are used when running the tests,
 are given in requirements-test.txt which is managed with the help of pip-tools
 as well.
 
