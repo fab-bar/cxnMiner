@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+
+import argparse
+import collections
+import json
+
+from cxnminer.utils.helpers import open_file
+
+if __name__ == "__main__":
+
+  parser = argparse.ArgumentParser()
+  parser.add_argument('dictionaries')
+  parser.add_argument('outfile')
+  parser.add_argument('min_frequency', type=int)
+  args = parser.parse_args()
+
+  with open_file(args.dictionaries) as dict_file:
+    vocabularies = json.load(dict_file)
+
+  kept = 0
+  removed = 0
+
+  vocabularies_new = {}
+  for level in vocabularies.keys():
+
+    vocabularies_new[level] = collections.defaultdict(int)
+
+    for word in vocabularies[level]:
+      if vocabularies[level][word] >= args.min_frequency:
+        vocabularies_new[level][word] = vocabularies[level][word]
+        kept += 1
+      else:
+        removed += 1
+
+  print("Kept: " + str(kept))
+  print("Dropped: " + str(removed))
+
+  with open_file(args.outfile, 'w') as outfile:
+    print(json.dumps(vocabularies_new), file=outfile)
