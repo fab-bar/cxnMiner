@@ -13,12 +13,20 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser()
   parser.add_argument('dictionaries')
   parser.add_argument('outfile')
+  parser.add_argument('--no_unknown',  action='store_true', default=False)
   args = parser.parse_args()
 
   with open_file(args.dictionaries) as dict_file:
     vocabularies = json.load(dict_file)
 
-  pattern_encoder = HuffmanEncoder(vocabularies, SyntacticNGramExtractor.get_pattern_type())
+  if args.no_unknown:
+    unknown = None
+  else:
+    unknown = '__unknown__'
+
+  pattern_encoder = HuffmanEncoder(vocabularies,
+                                   SyntacticNGramExtractor.get_pattern_type(),
+                                   unknown=unknown)
 
 
   with open_file(args.outfile, 'wb') as outfile:

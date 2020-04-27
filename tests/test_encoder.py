@@ -41,7 +41,7 @@ def test_encode_decode_different_levels(encoder_dict):
 
     assert test.decode(test.encode(pattern)) == pattern
 
-def test_encode_decode_unknown():
+def test_encode_decode_unknown_bitencoder():
 
     unknown_token = "__unknown__"
 
@@ -66,8 +66,32 @@ def test_encode_decode_unknown():
 
     assert test.decode(test.encode(pattern)) == expected_pattern
 
+def test_encode_decode_unknown_huffman():
 
-def test_encode_unknown_not_set():
+    unknown_token = "__unknown__"
+
+    test = HuffmanEncoder(
+        {'form': {'fox': 1, 'quick': 2, 'brown': 3}}, SNGram, unknown=unknown_token)
+
+    pattern_list = [
+        PatternElement('fox', 'form'),
+        SNGram.LEFT_BRACKET,
+        PatternElement('The', 'form'),
+        SNGram.COMMA,
+        PatternElement('quick', 'form'),
+        SNGram.COMMA,
+        PatternElement('brown', 'form'),
+        SNGram.RIGHT_BRACKET
+    ]
+    pattern =  SNGram.from_element_list(pattern_list)
+
+    expected_pattern_list = pattern_list
+    expected_pattern_list[2] = unknown_token
+    expected_pattern = SNGram.from_element_list(expected_pattern_list)
+
+    assert test.decode(test.encode(pattern)) == expected_pattern
+
+def test_encode_unknown_not_set_bitencoder():
 
     test = BitEncoder(
         {'form': set(['fox', 'quick', 'brown'])}, SNGram)
@@ -86,6 +110,27 @@ def test_encode_unknown_not_set():
 
     with pytest.raises(EncodeError):
         test.encode(pattern)
+
+def test_encode_unknown_not_set_huffman():
+
+    test = HuffmanEncoder(
+        {'form': {'fox': 1, 'quick': 2, 'brown': 3}}, SNGram)
+
+    pattern_list = [
+        PatternElement('fox', 'form'),
+        SNGram.LEFT_BRACKET,
+        PatternElement('The', 'form'),
+        SNGram.COMMA,
+        PatternElement('quick', 'form'),
+        SNGram.COMMA,
+        PatternElement('brown', 'form'),
+        SNGram.RIGHT_BRACKET
+    ]
+    pattern =  SNGram.from_element_list(pattern_list)
+
+    with pytest.raises(EncodeError):
+        test.encode(pattern)
+
 
 
 def test_decode_unknown_not_set():

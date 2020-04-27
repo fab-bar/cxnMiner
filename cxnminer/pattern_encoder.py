@@ -269,7 +269,7 @@ class HuffmanEncoder(CombinablePatternEncoder):
     # leading 0's
     prefix = bitarray.bitarray('1')
 
-    def __init__(self, frequency_dictionaries, pattern_type, special_weight=1):
+    def __init__(self, frequency_dictionaries, pattern_type, special_weight=1, unknown=None):
 
         self.pattern_type = pattern_type
 
@@ -287,6 +287,10 @@ class HuffmanEncoder(CombinablePatternEncoder):
         special_frequency = max_freq*special_weight
         for special_element in self.pattern_type.specialElements():
             huffman_freq_dict[special_element] = special_frequency
+
+        self.unknown = unknown
+        if self.unknown is not None:
+            huffman_freq_dict[unknown] = special_frequency
 
         self.huffman_dict = bitarray.util.huffman_code(huffman_freq_dict)
 
@@ -307,7 +311,17 @@ class HuffmanEncoder(CombinablePatternEncoder):
         try:
             code.encode(self.huffman_dict, pattern)
         except ValueError as e:
-            raise EncodeError(str(e))
+            if self.unknown is not None:
+
+                code = bitarray.bitarray()
+                for element in pattern:
+                    try:
+                        code.encode(self.huffman_dict, [element])
+                    except ValueError:
+                        print(element)
+                        code.encode(self.huffman_dict, [self.unknown])
+            else:
+                raise EncodeError(str(e))
 
         return self._bitarray_2_bytes(code)
 
@@ -343,6 +357,7 @@ class HuffmanEncoder(CombinablePatternEncoder):
     def _save(self, file_):
 
         pickle.dump(self.pattern_type, file_)
+        pickle.dump(self.unknown, file_)
         for key, element in self.huffman_dict.items():
             pickle.dump(key, file_)
             pickle.dump(element, file_)
@@ -351,8 +366,9 @@ class HuffmanEncoder(CombinablePatternEncoder):
     def _load(cls, file_):
 
         pattern_type = pickle.load(file_)
+        unknown = pickle.load(file_)
 
-        encoder = cls({}, pattern_type)
+        encoder = cls({}, pattern_type, unknown=unknown)
         huffman_dict = {}
         while True:
             try:
