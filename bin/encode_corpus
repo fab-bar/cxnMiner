@@ -2,15 +2,35 @@
 
 import argparse
 import json
+import logging
+import logging.config
+import multiprocessing
 
 import conllu
 
+from cxnminer.pattern import PatternElement
+from cxnminer.pattern_encoder import Base64Encoder, PatternEncoder
 from cxnminer.utils.helpers import open_file
 
 
 level_dict = {
     'np_function': 'deprel'
 }
+
+def encode_item(level, level_name, token, vocabulary, unknown=None, logger=None):
+
+    encoded = vocabulary.get(level).get(token[level_name], None)
+
+    if encoded is None:
+
+        if unknown is not None:
+            encoded = unknown
+        else:
+            if logger is not None:
+                logger.warning(str(PatternElement(token[level_name], level)) + " was not encoded.")
+            encoded = token[level_name]
+
+    return encoded
 
 
 if __name__ == "__main__":
@@ -20,21 +40,72 @@ if __name__ == "__main__":
     parser.add_argument('outfile')
     parser.add_argument('dictionary')
     parser.add_argument('levels', type=str, nargs='+')
+    parser.add_argument('--encoder_file')
+    parser.add_argument('--processes', type=int, default=4)
+    parser.add_argument('--logging_config', default=None)
     args = parser.parse_args()
+
+    loggingConfig = dict(
+            version = 1,
+            formatters = {
+                'f': {'format':
+                      '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'}
+            },
+            handlers = {
+                'h': {'class': 'logging.StreamHandler',
+                      'formatter': 'f',
+                      'level': logging.DEBUG},
+            },
+            root = {
+                'handlers': ['h'],
+                'level': logging.DEBUG,
+            }
+        )
+
+    if args.logging_config is not None:
+
+        try:
+            logging_config = json.loads(args.logging_config)
+        except json.JSONDecodeError:
+            with open(args.logging_config) as config_file:
+                logging_config = json.load(config_file)
+
+        loggingConfig.update(logging_config)
+
+    logging.config.dictConfig(loggingConfig)
+    logger = logging.getLogger(__name__)
 
     with open_file(args.dictionary) as dict_file:
         vocabulary = json.load(dict_file)
 
+    unknown = None
+    if args.encoder_file is not None:
+        with open_file(args.encoder_file, 'rb') as encoder_file:
+            encoder = Base64Encoder(PatternEncoder.load(encoder_file), binary=False)
+            unknown = encoder.encode_item(None)
+            del encoder
+
+
+    def encode_sentence(sentence):
+
+        for token in sentence:
+
+            for level in args.levels:
+
+                ## get name of level, if it is an alias
+                level_name = level_dict.get(level, level)
+
+                ## write encoded data into token
+                token[level_name] = encode_item(level, level_name, token, vocabulary, unknown, logger)
+
+        logger.info("Encoded sentence " + sentence.metadata['sent_id'])
+        return sentence
+
     with open_file(args.outfile, 'w') as outfile:
-        for sentence in conllu.parse_incr(open_file(args.infile)):
 
-            for token in sentence:
+        with multiprocessing.Pool(args.processes) as p:
 
-                for level in args.levels:
+            for sentence in p.imap(encode_sentence, conllu.parse_incr(open_file(args.infile)), chunksize=10):
 
-                    ## get name of level, if it is an alias
-                    level_name = level_dict.get(level, level)
-                    ## write encoded data into token
-                    token[level_name] = vocabulary.get(level).get(token[level_name], token[level_name])
+                print(sentence.serialize(), file=outfile)
 
-            print(sentence.serialize(), file=outfile)
