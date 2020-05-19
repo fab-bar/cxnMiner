@@ -4,89 +4,76 @@
 #
 #    pip-compile --output-file=requirements-dev.txt requirements-dev.in requirements-test.in setup.py
 #
-appdirs==1.4.3            # via virtualenv
+appdirs==1.4.4            # via virtualenv
 attrs==19.3.0             # via pytest
 backcall==0.1.0           # via ipython
-bitarray==1.2.1
+bitarray==1.2.2           # via cxnMiner (setup.py)
 blis==0.4.1               # via spacy, thinc
-boto3==1.12.21            # via smart-open
-botocore==1.15.21         # via boto3, s3transfer
-cachetools==4.0.0         # via google-auth
+boto3==1.13.12            # via smart-open
+boto==2.49.0              # via smart-open
+botocore==1.16.12         # via boto3, s3transfer
 catalogue==1.0.0          # via spacy, thinc
-certifi==2019.11.28       # via requests
+certifi==2020.4.5.1       # via requests
 chardet==3.0.4            # via requests
-conllu==2.3.2
-coverage-badge==1.0.1
-coverage==5.0.3           # via pytest-cov
+conllu==2.3.2             # via cxnMiner (setup.py)
+coverage-badge==1.0.1     # via -r requirements-dev.in
+coverage==5.1             # via pytest-cov
 cymem==2.0.3              # via preshed, spacy, thinc
-https://github.com/explosion/spacy-models/releases/download/de_core_news_sm-2.2.0/de_core_news_sm-2.2.0.tar.gz#egg=de_core_news_sm
-decopatch==1.4.7          # via pytest-cases
+https://github.com/explosion/spacy-models/releases/download/de_core_news_sm-2.2.0/de_core_news_sm-2.2.0.tar.gz#egg=de_core_news_sm  # via -r requirements-dev.in
+decopatch==1.4.8          # via pytest-cases
 decorator==4.4.2          # via ipython, traitlets
 distlib==0.3.0            # via virtualenv
 docutils==0.15.2          # via botocore
 filelock==3.0.12          # via tox, virtualenv
-gensim==3.8.1
-google-api-core==1.16.0   # via google-cloud-core
-google-auth==1.11.3       # via google-api-core, google-cloud-storage
-google-cloud-core==1.3.0  # via google-cloud-storage
-google-cloud-storage==1.26.0  # via smart-open
-google-resumable-media==0.5.0  # via google-cloud-storage
-googleapis-common-protos==1.51.0  # via google-api-core
+gensim==3.8.3             # via -r requirements-dev.in
 idna==2.9                 # via requests
-importlib-metadata==1.5.0  # via catalogue, importlib-resources, pluggy, pytest, tox, virtualenv
-importlib-resources==1.3.1  # via virtualenv
+importlib-metadata==1.6.0  # via catalogue, pluggy, pytest, tox, virtualenv
 ipython-genutils==0.2.0   # via traitlets
-ipython==7.9.0
-jedi==0.16.0              # via ipython
-jinja2==2.11.1            # via pybadges
-jmespath==0.9.5           # via boto3, botocore
-makefun==1.7.0            # via decopatch, pytest-cases
+ipython==7.14.0           # via -r requirements-dev.in
+jedi==0.17.0              # via ipython
+jinja2==2.11.2            # via pybadges
+jmespath==0.10.0          # via boto3, botocore
+makefun==1.9.2            # via decopatch, pytest-cases
 markupsafe==1.1.1         # via jinja2
-more-itertools==8.2.0     # via pytest
+more-itertools==8.3.0     # via pytest
 murmurhash==1.0.2         # via preshed, spacy, thinc
-numpy==1.18.1             # via blis, gensim, scipy, spacy, thinc
-packaging==20.3           # via pytest, tox
-parso==0.6.2              # via jedi
-pathlib2==2.3.5           # via pytest
+numpy==1.18.4             # via blis, gensim, scipy, spacy, thinc
+packaging==20.4           # via pytest, tox
+parso==0.7.0              # via jedi
 pexpect==4.8.0            # via ipython
 pickleshare==0.7.5        # via ipython
 plac==1.1.3               # via spacy, thinc
 pluggy==0.13.1            # via pytest, tox
 preshed==3.0.2            # via spacy, thinc
-prompt-toolkit==2.0.10    # via ipython
-protobuf==3.11.3          # via google-api-core, googleapis-common-protos
+prompt-toolkit==3.0.5     # via ipython
 ptyprocess==0.6.0         # via pexpect
 py==1.8.1                 # via pytest, tox
-pyasn1-modules==0.2.8     # via google-auth
-pyasn1==0.4.8             # via pyasn1-modules, rsa
-pybadges==2.2.1
+pybadges==2.2.1           # via -r requirements-dev.in
 pygments==2.6.1           # via ipython
-pyparsing==2.4.6          # via packaging
-pytest-cases==1.12.3
-pytest-cov==2.8.1
-pytest==5.4.1
-python-dateutil==2.8.0    # via botocore
-pytz==2019.3              # via google-api-core
-requests==2.23.0          # via google-api-core, pybadges, smart-open, spacy
-rsa==4.0                  # via google-auth
+pyparsing==2.4.7          # via packaging
+pytest-cases==1.13.1      # via -r requirements-test.in
+pytest-cov==2.8.1         # via -r requirements-test.in
+pytest==5.4.2             # via -r requirements-test.in, pytest-cov
+python-dateutil==2.8.1    # via botocore
+requests==2.23.0          # via pybadges, smart-open, spacy
 s3transfer==0.3.3         # via boto3
 scipy==1.4.1              # via gensim
-six==1.14.0               # via gensim, google-api-core, google-auth, google-resumable-media, makefun, packaging, pathlib2, prompt-toolkit, protobuf, pytest-cases, python-dateutil, tox, traitlets, virtualenv
-smart-open==1.10.0        # via gensim
-spacy==2.2.4
+six==1.14.0               # via gensim, makefun, packaging, pytest-cases, python-dateutil, tox, traitlets, virtualenv
+smart-open==2.0.0         # via gensim
+spacy==2.2.4              # via cxnMiner (setup.py), de-core-news-sm
 srsly==1.0.2              # via spacy, thinc
 thinc==7.4.0              # via spacy
-toml==0.10.0              # via tox
-tox-battery==0.5.2
-tox==3.14.5
-tqdm==4.43.0              # via spacy, thinc
+toml==0.10.1              # via tox
+tox-battery==0.6.0        # via -r requirements-dev.in
+tox==3.15.0               # via -r requirements-dev.in, tox-battery
+tqdm==4.46.0              # via spacy, thinc
 traitlets==4.3.3          # via ipython
-urllib3==1.25.8           # via botocore, requests
-virtualenv==20.0.10       # via tox
+urllib3==1.25.9           # via botocore, requests
+virtualenv==20.0.20       # via tox
 wasabi==0.6.0             # via spacy, thinc
-wcwidth==0.1.8            # via prompt-toolkit, pytest
+wcwidth==0.1.9            # via prompt-toolkit, pytest
 wrapt==1.12.1             # via pytest-cases
-zipp==1.2.0               # via importlib-metadata, importlib-resources
+zipp==3.1.0               # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

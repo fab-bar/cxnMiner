@@ -37,7 +37,8 @@ requirements-docs.txt: setup.py requirements-docs.in | myvenv
 
 .PHONY: upgrade
 upgrade:
-	 make UPGRADE=--upgrade \
+	$(VENV)/pip install --upgrade pip
+	make UPGRADE=--upgrade \
 	-W requirements-dev.in -W requirements-test.in -W requirements-docs.in \
 	requirements-dev.txt requirements-test.txt requirements-docs.txt
 
