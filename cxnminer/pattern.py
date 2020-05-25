@@ -90,10 +90,18 @@ class SNGram(Pattern):
             for child in head.children:
                 self._add_tree_length(child)
 
-    def __init__(self, tree):
+    def __init__(self, tree,
+                 left_bracket=None, right_bracket=None, comma=None):
 
         self.tree = tree
         self._length = None
+
+        if left_bracket is not None:
+            self.LEFT_BRACKET = left_bracket
+        if right_bracket is not None:
+            self.RIGHT_BRACKET = right_bracket
+        if comma is not None:
+            self.COMMA = comma
 
     def __eq__(self, other):
 
@@ -140,7 +148,15 @@ class SNGram(Pattern):
         return self._get_subtree_list(self.tree)
 
     @classmethod
-    def _tree_from_element_list(cls, element_list):
+    def _tree_from_element_list(cls, element_list,
+                                left_bracket=None, right_bracket=None, comma=None):
+
+        if left_bracket is None:
+            left_bracket = cls.LEFT_BRACKET
+        if right_bracket is None:
+            right_bracket = cls.RIGHT_BRACKET
+        if comma is None:
+            comma = cls.COMMA
 
         ## split into head and rest
         head = element_list[0]
@@ -148,7 +164,7 @@ class SNGram(Pattern):
 
         if not rest:
             return [cls.Tree(head, None)]
-        elif rest[0] == cls.LEFT_BRACKET:
+        elif rest[0] == left_bracket:
 
             ## get closing bracket
             open_brackets = 1
@@ -157,38 +173,45 @@ class SNGram(Pattern):
             while open_brackets:
 
                 closing_index += 1
-                if rest[closing_index] == cls.RIGHT_BRACKET:
+                if rest[closing_index] == right_bracket:
                     open_brackets -= 1
-                elif rest[closing_index] == cls.LEFT_BRACKET:
+                elif rest[closing_index] == left_bracket:
                     open_brackets += 1
 
             ## if RIGHT_BRACKET is not at the end it needs to be a comma
             if closing_index + 1 < len(rest):
-                trees = [cls.Tree(head, cls._tree_from_element_list(rest[1:closing_index]))]
-                trees.extend(cls._tree_from_element_list(rest[closing_index+2:]))
+                trees = [cls.Tree(head, cls._tree_from_element_list(rest[1:closing_index],
+                                                                    left_bracket, right_bracket, comma))]
+                trees.extend(cls._tree_from_element_list(rest[closing_index+2:],
+                                                         left_bracket, right_bracket, comma))
                 return  tuple(trees)
             else:
-                return  (cls.Tree(head, cls._tree_from_element_list(rest[1:closing_index])),)
+                return  (cls.Tree(head, cls._tree_from_element_list(rest[1:closing_index],
+                                                                    left_bracket, right_bracket, comma)),)
 
-        elif rest[0] == cls.COMMA:
+        elif rest[0] == comma:
             trees = [cls.Tree(head, None)]
-            trees.extend(cls._tree_from_element_list(rest[1:]))
+            trees.extend(cls._tree_from_element_list(rest[1:], left_bracket, right_bracket, comma))
             return tuple(trees)
         else:
             ## next element is a pattern element
-            return (cls.Tree(head, cls._tree_from_element_list(rest)),)
+            return (cls.Tree(head, cls._tree_from_element_list(rest, left_bracket, right_bracket, comma)),)
 
     @classmethod
-    def from_element_list(cls, element_list):
+    def from_element_list(cls, element_list,
+                          left_bracket=None, right_bracket=None, comma=None):
 
-        return cls(cls._tree_from_element_list(element_list)[0])
+        return cls(cls._tree_from_element_list(element_list, left_bracket, right_bracket, comma)[0],
+                   left_bracket, right_bracket, comma)
 
     def __str__(self):
         """Follows the metalanguage of Grigori Sidorov (2013)"""
 
         return " ".join(
             map(lambda x: str(x), self.get_element_list())
-        ).replace(" ,", ",").replace("[ ", "[").replace(" ]", "]")
+        ).replace(" " + self.COMMA, self.COMMA
+        ).replace(self.LEFT_BRACKET + " ", self.LEFT_BRACKET
+        ).replace(" " + self.RIGHT_BRACKET, self.RIGHT_BRACKET)
 
 
 class TokenSNGram(SNGram, TokenPattern):
@@ -219,7 +242,8 @@ class TokenSNGram(SNGram, TokenPattern):
 
     def get_pattern_list(self, features=frozenset(['form'])):
 
-        return [SNGram(tree) for tree in self._map_tree(self.tree, features)]
+        return [SNGram(tree, self.LEFT_BRACKET, self.RIGHT_BRACKET, self.COMMA)
+                for tree in self._map_tree(self.tree, features)]
 
     def get_base_pattern(self, feature='form'):
 
@@ -229,4 +253,4 @@ class TokenSNGram(SNGram, TokenPattern):
         if len(tree_list) > 1:
             raise RuntimeError("Created more than one pattern.") # pragma: no cover
 
-        return SNGram(tree_list[0])
+        return SNGram(tree_list[0], self.LEFT_BRACKET, self.RIGHT_BRACKET, self.COMMA)

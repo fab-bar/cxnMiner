@@ -28,7 +28,9 @@ class SyntacticNGramExtractor(PatternExtractor):
         return SNGram # pragma: no cover
 
     def __init__(self, min_size=2, max_size=6,
-                 special_node_conversion=None, max_open_path_size=0):
+                 special_node_conversion=None, max_open_path_size=0,
+                 left_bracket=None, right_bracket=None, comma=None
+    ):
 
         self.min_size = min_size
         self.max_size = max_size
@@ -37,6 +39,10 @@ class SyntacticNGramExtractor(PatternExtractor):
         else:
             self.max_open_path_size = None
         self.special_node_conversion = special_node_conversion
+
+        self.left_bracket = left_bracket
+        self.right_bracket = right_bracket
+        self.comma = comma
 
     def _add_path(self, path, still_open_paths, patterns):
 
@@ -51,7 +57,9 @@ class SyntacticNGramExtractor(PatternExtractor):
             special_path = self.special_node_conversion(tree)
             if special_path is not None:
                 special_path.orig_tree = tree
-                self._add_path(TokenSNGram(special_path), still_open_paths, patterns)
+                self._add_path(TokenSNGram(special_path,
+                                           self.left_bracket, self.right_bracket, self.comma),
+                               still_open_paths, patterns)
 
     def _get_bottom_up_subtrees(self, tree):
 
@@ -61,7 +69,9 @@ class SyntacticNGramExtractor(PatternExtractor):
 
         if not tree.children:
 
-            self._add_path(TokenSNGram(tree), still_open_paths, patterns)
+            self._add_path(TokenSNGram(tree,
+                                       self.left_bracket, self.right_bracket, self.comma),
+                           still_open_paths, patterns)
             self._add_special_path(tree, still_open_paths, patterns)
 
         else:
@@ -74,7 +84,8 @@ class SyntacticNGramExtractor(PatternExtractor):
 
             still_open_paths = []
             for open_path_iter in itertools.product(*open_paths):
-                open_path = TokenSNGram(SNGram.Tree(tree.token, open_path_iter))
+                open_path = TokenSNGram(SNGram.Tree(tree.token, open_path_iter),
+                                        self.left_bracket, self.right_bracket, self.comma)
 
                 self._add_path(open_path, still_open_paths, patterns)
                 self._add_special_path(tree, still_open_paths, patterns)

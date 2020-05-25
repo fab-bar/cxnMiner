@@ -169,6 +169,32 @@ def case_jumps_phrases():
         ]
     }
 
+def case_changed_special():
+
+    data = """
+# text = The quick brown fox
+1   The     the    DET    DT   Definite=Def|PronType=Art   4   det     _   _
+2   quick   quick  ADJ    JJ   Degree=Pos                  4   amod    _   _
+3   brown   brown  ADJ    JJ   Degree=Pos                  4   amod    _   _
+4   fox     fox    NOUN   NN   Number=Sing                 0   nsubj   _   _
+
+"""
+
+    return TokenSNGram(conllu.parse_tree(data)[0], left_bracket="(", right_bracket=")", comma="_"), {
+        "length": 4,
+        "str": "fox (The_ quick_ brown)",
+        "repr": [
+            PatternElement('fox', 'form', 4),
+            "(",
+            PatternElement('The', 'form', 1),
+            "_",
+            PatternElement('quick', 'form', 2),
+            "_",
+            PatternElement('brown', 'form', 3),
+            ")"
+        ]
+    }
+
 
 ## Examples from Grigori Sidorov (2013): Non-linear construction of n-grams in computational linguistics
 
@@ -253,7 +279,10 @@ def test_sngram_from_element_list(case_data):
 
     sngram, expected = case_data.get()
 
-    assert sngram.get_pattern_list(['form'])[0] == SNGram.from_element_list(expected['repr'])
+    assert sngram.get_pattern_list(['form'])[0] == SNGram.from_element_list(expected['repr'],
+                                                                            left_bracket=sngram.LEFT_BRACKET,
+                                                                            right_bracket=sngram.RIGHT_BRACKET,
+                                                                            comma=sngram.COMMA)
 
 @cases_data(module=THIS_MODULE)
 @pytest.mark.parametrize("features", [(['form', 'upostag'])])
