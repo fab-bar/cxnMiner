@@ -175,14 +175,15 @@ to encode the corpus using lookup.
 
 .. code-block:: bash
 
-  bin/encode_vocabulary infile outfile encoder
+  bin/encode_vocabulary vocabulary outfile encoder
 
 Options
 +++++++
 
-infile
-  The name of the file that contains the dictionary extracted from the corpus.
+vocabulary
+  Either the name of the file that contains the dictionary extracted from the corpus.
   If the filename ends with ".gz" it is assumed to be a compressed file.
+  Or a json-String containing the vocabulary directly.
 
 outfile
   The name of the file that is created by the script (if it exists, it will be overwritten).
@@ -194,6 +195,9 @@ encoder
 
 --no_frequencies
   Add this flag if the dictionary does not contain frequencies.
+
+--add_special
+  Encode the special elements of the pattern type as well.
 
 --loging_config
   See above.

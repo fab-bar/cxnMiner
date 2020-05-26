@@ -70,6 +70,12 @@ class PatternEncoder(metaclass=abc.ABCMeta):
 
         return int.from_bytes(bytes_, byteorder='little')
 
+
+    def get_pattern_type(self):
+
+        return self.pattern_type
+
+
 class CombinablePatternEncoder(PatternEncoder):
     """A pattern encoder that creates combinable patterns.
 
@@ -90,6 +96,11 @@ class Base64Encoder(PatternEncoder):
 
         self.encoder = encoder
         self.binary = binary
+
+
+    def get_pattern_type(self):
+
+        return self.encoder.get_pattern_type()
 
     @classmethod
     def b64encode(cls, pattern, binary=True):

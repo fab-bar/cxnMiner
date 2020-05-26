@@ -180,6 +180,11 @@ encoder = [
 ]
 
 @pytest.mark.parametrize("encoder", encoder)
+def test_get_pattern_type(encoder):
+
+    assert encoder.get_pattern_type() == SNGram
+
+@pytest.mark.parametrize("encoder", encoder)
 def test_encode_decode(encoder):
 
     pattern =  SNGram.from_element_list([
