@@ -11,7 +11,7 @@ import conllu
 
 from cxnminer.extractor import SyntacticNGramExtractor
 from cxnminer.pattern import SNGram
-from cxnminer.pattern_encoder import Base64Encoder, HuffmanEncoder
+from cxnminer.pattern_encoder import PatternEncoder, Base64Encoder, HuffmanEncoder
 from cxnminer.utils.helpers import open_file
 
 @click.group()
@@ -225,4 +225,26 @@ def convert_pattern_list(ctx, infile, outfile, is_int, remove_hapax):
 
             if not remove_hapax or len(contents) > 1:
                 write_pattern(current_pattern, contents, outfile)
+
+
+@utils.command()
+@click.pass_context
+@click.argument('infile')
+@click.argument('encoder')
+@click.argument('outfile')
+def decode_pattern_collection(ctx, infile, encoder, outfile):
+
+    with open_file(encoder, 'rb') as encoder_file:
+        pattern_encoder = Base64Encoder(PatternEncoder.load(encoder_file), binary=False)
+
+    with open_file(infile) as infile:
+        with open_file(outfile, 'w') as o:
+
+            for line in infile:
+
+                pattern, content = json.loads(line)
+                decoded_pattern = pattern_encoder.decode(pattern)
+
+                json.dump((str(decoded_pattern), content), o)
+                o.write("\n")
 
