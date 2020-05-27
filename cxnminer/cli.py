@@ -60,6 +60,49 @@ def conversion_function(tree, tags):
     else:
         return None
 
+
+def encode_pattern(pattern):
+
+    current_pattern = b''
+    for element in pattern.get_element_list():
+        encoded_element = Base64Encoder.b64decode(str(element))
+        current_pattern = HuffmanEncoder.combine(current_pattern, encoded_element)
+
+    return Base64Encoder.b64encode(current_pattern, binary=False)
+
+def pattern_extraction(sentence_tuple, extractor, word_level, logger):
+
+    sentence_nr, sentence = sentence_tuple
+
+    pattern_list = []
+
+    logger.info("Extract patterns from sentence {}, {}".format(
+        str(sentence_nr + 1), sentence.metadata.get('sent_id', "no id")))
+
+    sentence_base_patterns = collections.defaultdict(list)
+    tpatterns = extractor.extract_patterns(sentence)
+
+    for tpattern in tpatterns:
+        base_pattern = tpattern.get_base_pattern(word_level)
+
+        base_pattern_encoded = encode_pattern(base_pattern)
+
+        base_pattern_positions = ",".join(
+            [str(element) for element in tpattern.get_base_pattern('id').get_element_list()])
+
+        sentence_base_patterns[base_pattern_encoded].append(base_pattern_positions)
+
+        for pattern in tpattern.get_pattern_list(frozenset(['lemma', 'upostag', 'np_function'])):
+
+            if pattern != base_pattern:
+                pattern_list.append((False, encode_pattern(pattern), base_pattern_encoded))
+
+    for encoded_base_pattern, positions in sentence_base_patterns.items():
+        for _, _ in itertools.groupby(sorted(positions)):
+            pattern_list.append((True, encoded_base_pattern, sentence_nr + 1))
+
+    return pattern_list
+
 @main.command()
 @click.pass_context
 @click.argument('infile')
@@ -95,48 +138,23 @@ def extract_patterns(ctx, infile, outfile_patterns, outfile_base,
 
     patterns = collections.defaultdict(set)
     base_patterns = collections.defaultdict(list)
-    sentence_nr = 0
 
-
-    def encode_pattern(pattern):
-
-        current_pattern = b''
-        for element in pattern.get_element_list():
-            encoded_element = Base64Encoder.b64decode(str(element))
-            current_pattern = HuffmanEncoder.combine(current_pattern, encoded_element)
-
-        return Base64Encoder.b64encode(current_pattern, binary=False)
 
     with open_file(infile) as infile:
 
-        for sentence in conllu.parse_incr(infile):
+        for sentence_patterns in map(
+                functools.partial(
+                    pattern_extraction, extractor=extractor, word_level=word_level, logger=ctx.obj['logger']),
+                enumerate(conllu.parse_incr(infile))):
 
-            sentence_nr += 1
-            ctx.obj['logger'].info("Extract patterns from sentence {}, {}".format(
-                str(sentence_nr), sentence.metadata.get('sent_id', "no id")))
+            for is_base_pattern, pattern, content in sentence_patterns:
+                if not is_base_pattern:
+                    if content not in base_patterns:
+                        base_patterns[content] = ([])
+                    patterns[pattern].add(content)
+                else:
+                    base_patterns[pattern].append(content)
 
-            sentence_base_patterns = collections.defaultdict(list)
-
-            tpatterns = extractor.extract_patterns(sentence)
-
-            for tpattern in tpatterns:
-                base_pattern = tpattern.get_base_pattern(word_level)
-
-                base_pattern_encoded = encode_pattern(base_pattern)
-
-                base_pattern_positions = ",".join(
-                    [str(element) for element in tpattern.get_base_pattern('id').get_element_list()])
-
-                sentence_base_patterns[base_pattern_encoded].append(base_pattern_positions)
-
-                for pattern in tpattern.get_pattern_list(frozenset(['lemma', 'upostag', 'np_function'])):
-
-                    if pattern != base_pattern:
-                        patterns[encode_pattern(pattern)].add(base_pattern_encoded)
-
-            for encoded_base_pattern, positions in sentence_base_patterns.items():
-                for _, _ in itertools.groupby(sorted(positions)):
-                    base_patterns[encoded_base_pattern].append(sentence_nr)
 
     for pattern in patterns.keys():
         patterns[pattern] = list(patterns[pattern])
