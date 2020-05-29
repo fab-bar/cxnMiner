@@ -10,7 +10,7 @@ from cxnminer.pattern import PatternElement
 from cxnminer.pattern_encoder import PatternEncoder, Base64Encoder
 from cxnminer.cli import main
 
-expected_patterns_without_phrase = {
+expected_patterns_without_phrase_and_unknown = {
     # "fox [The, quick, brown]"
     "NOUN [the, quick, brown]": {"fox [the, quick, brown]"},
     "fox [DET, quick, brown]": {"fox [the, quick, brown]"},
@@ -48,40 +48,49 @@ expected_patterns_without_phrase = {
     "NOUN [over, DET, ADJ]": {"dog [over, the, lazy]"},
     "dog [ADP, DET, ADJ]": {"dog [over, the, lazy]"},
 
-    # "tail [with, the, long]"
-    "NOUN [__unknown__, the, __unknown__]": {"__unknown__ [__unknown__, the, __unknown__]"},
-    "__unknown__ [ADP, the, __unknown__]": {"__unknown__ [__unknown__, the, __unknown__]"},
-    "__unknown__ [__unknown__, DET, __unknown__]": {"__unknown__ [__unknown__, the, __unknown__]"},
-    "__unknown__ [__unknown__, the, ADJ]": {"__unknown__ [__unknown__, the, __unknown__]"},
-
-    "NOUN [ADP, the, __unknown__]": {"__unknown__ [__unknown__, the, __unknown__]"},
-    "NOUN [__unknown__, DET, __unknown__]": {"__unknown__ [__unknown__, the, __unknown__]"},
-    "NOUN [__unknown__, the, ADJ]": {"__unknown__ [__unknown__, the, __unknown__]"},
-    "__unknown__ [ADP, DET, __unknown__]": {"__unknown__ [__unknown__, the, __unknown__]"},
-    "__unknown__ [ADP, the, ADJ]": {"__unknown__ [__unknown__, the, __unknown__]"},
-    "__unknown__ [__unknown__, DET, ADJ]": {"__unknown__ [__unknown__, the, __unknown__]"},
-
-    "NOUN [ADP, DET, __unknown__]": {"__unknown__ [__unknown__, the, __unknown__]"},
-    "NOUN [__unknown__, DET, ADJ]": {"__unknown__ [__unknown__, the, __unknown__]"},
-    "__unknown__ [ADP, DET, ADJ]": {"__unknown__ [__unknown__, the, __unknown__]"},
-
     # "dog [over, the, lazy]"
     # "tail [with, the, long]",
     "NOUN [ADP, the, ADJ]": {"dog [over, the, lazy]", "__unknown__ [__unknown__, the, __unknown__]"},
     "NOUN [ADP, DET, ADJ]": {"dog [over, the, lazy]", "__unknown__ [__unknown__, the, __unknown__]"},
 
-    # "bananas [,, and]"
-    "NOUN [,, __unknown__]": {"__unknown__ [,, __unknown__]"},
-    "__unknown__ [PUNCT, __unknown__]": {"__unknown__ [,, __unknown__]"},
-    "__unknown__ [,, __unknown__]": {"__unknown__ [,, __unknown__]"},
-    "NOUN [PUNCT, __unknown__]": {"__unknown__ [,, __unknown__]"},
-
     # "oranges,"
     # "pears,"
     "NOUN,": {"__unknown__,"},
-    "__unknown__ PUNCT": {"__unknown__,"},
     "NOUN PUNCT": {"__unknown__,"},
 }
+
+expected_patterns_without_phrase = {
+    **expected_patterns_without_phrase_and_unknown,
+    **{
+        # "tail [with, the, long]"
+        "NOUN [__unknown__, the, __unknown__]": {"__unknown__ [__unknown__, the, __unknown__]"},
+        "__unknown__ [ADP, the, __unknown__]": {"__unknown__ [__unknown__, the, __unknown__]"},
+        "__unknown__ [__unknown__, DET, __unknown__]": {"__unknown__ [__unknown__, the, __unknown__]"},
+        "__unknown__ [__unknown__, the, ADJ]": {"__unknown__ [__unknown__, the, __unknown__]"},
+
+        "NOUN [ADP, the, __unknown__]": {"__unknown__ [__unknown__, the, __unknown__]"},
+        "NOUN [__unknown__, DET, __unknown__]": {"__unknown__ [__unknown__, the, __unknown__]"},
+        "NOUN [__unknown__, the, ADJ]": {"__unknown__ [__unknown__, the, __unknown__]"},
+        "__unknown__ [ADP, DET, __unknown__]": {"__unknown__ [__unknown__, the, __unknown__]"},
+        "__unknown__ [ADP, the, ADJ]": {"__unknown__ [__unknown__, the, __unknown__]"},
+        "__unknown__ [__unknown__, DET, ADJ]": {"__unknown__ [__unknown__, the, __unknown__]"},
+
+        "NOUN [ADP, DET, __unknown__]": {"__unknown__ [__unknown__, the, __unknown__]"},
+        "NOUN [__unknown__, DET, ADJ]": {"__unknown__ [__unknown__, the, __unknown__]"},
+        "__unknown__ [ADP, DET, ADJ]": {"__unknown__ [__unknown__, the, __unknown__]"},
+
+        # "bananas [,, and]"
+        "NOUN [,, __unknown__]": {"__unknown__ [,, __unknown__]"},
+        "__unknown__ [PUNCT, __unknown__]": {"__unknown__ [,, __unknown__]"},
+        "__unknown__ [,, __unknown__]": {"__unknown__ [,, __unknown__]"},
+        "NOUN [PUNCT, __unknown__]": {"__unknown__ [,, __unknown__]"},
+
+        # "oranges,"
+        # "pears,"
+        "__unknown__ PUNCT": {"__unknown__,"},
+    }
+}
+
 
 expected_patterns_with_phrase = {
     # "jumps [nsubj, nmod, .]"
@@ -139,13 +148,18 @@ expected_patterns_with_phrase = {
     }
 }
 
-
-expected_basepatterns_without_phrase = {
+expected_basepatterns_without_phrase_without_unknown = {
     "fox [the, quick, brown]": [1],
     "dog [over, the, lazy]": [1,2,3],
     "__unknown__ [__unknown__, the, __unknown__]": [3],
-    "__unknown__ [,, __unknown__]": [4],
     "__unknown__,": [4,4]
+}
+
+expected_basepatterns_without_phrase = {
+    **expected_basepatterns_without_phrase_without_unknown,
+    **{
+        "__unknown__ [,, __unknown__]": [4],
+    }
 }
 
 expected_basepatterns_with_phrase = {
@@ -163,6 +177,7 @@ expected_basepatterns_with_phrase = {
         {**expected_patterns_without_phrase, **expected_patterns_with_phrase},
         {**expected_basepatterns_without_phrase, **expected_basepatterns_with_phrase}
     ),
+    (["--skip_unknown"], expected_patterns_without_phrase_and_unknown, expected_basepatterns_without_phrase_without_unknown)
 ])
 def test_extract_patterns_with_phrases(parameters, expected_patterns, expected_basepatterns):
 

@@ -337,7 +337,6 @@ class HuffmanEncoder(CombinablePatternEncoder):
                     try:
                         code.encode(self.huffman_dict, [element])
                     except ValueError:
-                        print(element)
                         code.encode(self.huffman_dict, [self.unknown])
             else:
                 raise EncodeError(str(e))

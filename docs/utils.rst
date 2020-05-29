@@ -179,7 +179,7 @@ to encode the corpus using lookup.
 .. code-block:: bash
 
   bin/encode_vocabulary vocabulary outfile encoder
-  bin/encode_vocabulary example_data/example_data_dict_filtered.json example_data/example_data_dict_filtered_encoded.json example_data/example_data_encoder --add_special
+  bin/encode_vocabulary example_data/example_data_dict_filtered.json example_data/example_data_dict_filtered_encoded.json example_data/example_data_encoder --add_special --add_unknown
 
 Options
 +++++++
@@ -202,6 +202,9 @@ encoder
 
 --add_special
   Encode the special elements of the pattern type as well.
+
+--add_unknown
+  Encode the unknown element. Added to the dict with the key '__unknown'.
 
 --loging_config
   See above.
