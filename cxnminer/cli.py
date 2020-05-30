@@ -89,23 +89,24 @@ def pattern_extraction(sentence_tuple, extractor, word_level, logger, unknown=No
 
         base_pattern = tpattern.get_base_pattern(word_level)
 
-        base_pattern_encoded = encode_pattern(base_pattern)
-
-        base_pattern_positions = ",".join(
-            [str(element) for element in tpattern.get_base_pattern('id').get_element_list()])
+        base_pattern_encoded = None
 
         for pattern in tpattern.get_pattern_list(frozenset(['lemma', 'upostag', 'np_function'])):
 
-            ### only keep patterns that consist of given vocabulary entries
-            if known is None or all(
-                    [getattr(element, "form", element) in known.get(
-                        getattr(element, "level", "__special__"), {})
-                     for element in pattern.get_element_list()]):
+            if pattern != base_pattern:
+                ### only keep patterns that consist of given vocabulary entries
                 if unknown is None or not any((unknown == getattr(element, "form", None) for element in pattern.get_element_list())):
-                    if pattern != base_pattern:
+                    if known is None or all(
+                            (getattr(element, "form", element) in known.get(
+                                getattr(element, "level", "__special__"), {})
+                             for element in pattern.get_element_list())):
+                        if base_pattern_encoded is None:
+                            base_pattern_encoded = encode_pattern(base_pattern)
                         this_pattern_list.append((False, encode_pattern(pattern), base_pattern_encoded))
 
         if this_pattern_list:
+            base_pattern_positions = ",".join(
+                [str(element) for element in tpattern.get_base_pattern('id').get_element_list()])
             sentence_base_patterns[base_pattern_encoded].append(base_pattern_positions)
             pattern_list.extend(this_pattern_list)
 
