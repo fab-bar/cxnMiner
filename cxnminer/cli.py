@@ -126,8 +126,10 @@ def pattern_extraction(sentence_tuple, extractor, word_level, logger, unknown=No
 @click.option('--max_pattern_size', type=int, default=4)
 @click.option('--keep_only_dict_words', is_flag=True)
 @click.option('--skip_unknown', is_flag=True)
+@click.option('--only_base', is_flag=True)
 def extract_patterns(ctx, infile, outfile_patterns, outfile_base,
-                     word_level, phrase_tags, encoded_dictionaries, max_pattern_size, keep_only_dict_words, skip_unknown):
+                     word_level, phrase_tags, encoded_dictionaries, max_pattern_size,
+                     keep_only_dict_words, skip_unknown, only_base):
 
     try:
         encoded_dict = json.loads(encoded_dictionaries)
@@ -178,15 +180,17 @@ def extract_patterns(ctx, infile, outfile_patterns, outfile_base,
                 if not is_base_pattern:
                     if content not in base_patterns:
                         base_patterns[content] = ([])
-                    patterns[pattern].add(content)
+                    if not only_base:
+                        patterns[pattern].add(content)
                 else:
                     base_patterns[pattern].append(content)
 
 
-    for pattern in patterns.keys():
-        patterns[pattern] = list(patterns[pattern])
-    with open_file(outfile_patterns, 'w') as outfile:
-        json.dump(patterns, outfile)
+    if not only_base:
+        for pattern in patterns.keys():
+            patterns[pattern] = list(patterns[pattern])
+        with open_file(outfile_patterns, 'w') as outfile:
+            json.dump(patterns, outfile)
 
     with open_file(outfile_base, 'w') as outfile:
         json.dump(base_patterns, outfile)
