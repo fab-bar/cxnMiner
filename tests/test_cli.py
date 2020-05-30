@@ -177,7 +177,8 @@ expected_basepatterns_with_phrase = {
         {**expected_patterns_without_phrase, **expected_patterns_with_phrase},
         {**expected_basepatterns_without_phrase, **expected_basepatterns_with_phrase}
     ),
-    (["--skip_unknown"], expected_patterns_without_phrase_and_unknown, expected_basepatterns_without_phrase_without_unknown)
+    (["--skip_unknown"], expected_patterns_without_phrase_and_unknown, expected_basepatterns_without_phrase_without_unknown),
+    (["--keep_only_dict_words"], expected_patterns_without_phrase_and_unknown, expected_basepatterns_without_phrase_without_unknown)
 ])
 def test_extract_patterns_with_phrases(parameters, expected_patterns, expected_basepatterns):
 

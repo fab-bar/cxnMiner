@@ -1,4 +1,5 @@
 import collections
+import collections.abc
 import functools
 import itertools
 import json
@@ -70,7 +71,7 @@ def encode_pattern(pattern):
 
     return Base64Encoder.b64encode(current_pattern, binary=False)
 
-def pattern_extraction(sentence_tuple, extractor, word_level, logger, unknown=None):
+def pattern_extraction(sentence_tuple, extractor, word_level, logger, unknown=None, known=None):
 
     sentence_nr, sentence = sentence_tuple
 
@@ -95,14 +96,18 @@ def pattern_extraction(sentence_tuple, extractor, word_level, logger, unknown=No
 
         for pattern in tpattern.get_pattern_list(frozenset(['lemma', 'upostag', 'np_function'])):
 
-            if unknown is None or not any([unknown == getattr(element, "form", None) for element in pattern.get_element_list()]):
-                if pattern != base_pattern:
-                    this_pattern_list.append((False, encode_pattern(pattern), base_pattern_encoded))
+            ### only keep patterns that consist of given vocabulary entries
+            if known is None or all(
+                    [getattr(element, "form", element) in known.get(
+                        getattr(element, "level", "__special__"), {})
+                     for element in pattern.get_element_list()]):
+                if unknown is None or not any((unknown == getattr(element, "form", None) for element in pattern.get_element_list())):
+                    if pattern != base_pattern:
+                        this_pattern_list.append((False, encode_pattern(pattern), base_pattern_encoded))
 
         if this_pattern_list:
             sentence_base_patterns[base_pattern_encoded].append(base_pattern_positions)
             pattern_list.extend(this_pattern_list)
-
 
     for encoded_base_pattern, positions in sentence_base_patterns.items():
         for _, _ in itertools.groupby(sorted(positions)):
@@ -119,9 +124,10 @@ def pattern_extraction(sentence_tuple, extractor, word_level, logger, unknown=No
 @click.argument('phrase_tags', type=str, nargs=-1)
 @click.option('--encoded_dictionaries', type=str, default="{}")
 @click.option('--max_pattern_size', type=int, default=4)
+@click.option('--keep_only_dict_words', is_flag=True)
 @click.option('--skip_unknown', is_flag=True)
 def extract_patterns(ctx, infile, outfile_patterns, outfile_base,
-                     word_level, phrase_tags, encoded_dictionaries, max_pattern_size, skip_unknown):
+                     word_level, phrase_tags, encoded_dictionaries, max_pattern_size, keep_only_dict_words, skip_unknown):
 
     try:
         encoded_dict = json.loads(encoded_dictionaries)
@@ -136,11 +142,18 @@ def extract_patterns(ctx, infile, outfile_patterns, outfile_base,
     else:
         unknown = None
 
+    if keep_only_dict_words:
+        known = {level: set(vocab.values()) for level, vocab in encoded_dict.items() if isinstance(vocab, collections.abc.Mapping)}
+    else:
+        known = None
+
     if phrase_tags:
         phrase_tags = [encoded_dict.get("upostag", {}).get(element, element) for element in phrase_tags]
         special_node_conversion = functools.partial(conversion_function, tags=phrase_tags)
     else:
         special_node_conversion = None
+
+    del encoded_dict
 
     extractor = SyntacticNGramExtractor(
         max_size=max_pattern_size,
@@ -157,7 +170,8 @@ def extract_patterns(ctx, infile, outfile_patterns, outfile_base,
 
         for sentence_patterns in map(
                 functools.partial(
-                    pattern_extraction, extractor=extractor, word_level=word_level, logger=ctx.obj['logger'], unknown=unknown),
+                    pattern_extraction, extractor=extractor, word_level=word_level, logger=ctx.obj['logger'],
+                    unknown=unknown, known=known),
                 enumerate(conllu.parse_incr(infile))):
 
             for is_base_pattern, pattern, content in sentence_patterns:
