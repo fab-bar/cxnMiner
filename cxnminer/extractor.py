@@ -28,7 +28,7 @@ class SyntacticNGramExtractor(PatternExtractor):
         return SNGram # pragma: no cover
 
     def __init__(self, min_size=2, max_size=6,
-                 special_node_conversion=None, max_open_path_size=0,
+                 special_node_conversion=None, max_open_path_size=0, max_open_path_number=100,
                  left_bracket=None, right_bracket=None, comma=None
     ):
 
@@ -38,6 +38,12 @@ class SyntacticNGramExtractor(PatternExtractor):
             self.max_open_path_size = max(max_open_path_size, max_size-1)
         else:
             self.max_open_path_size = None
+
+        if max_open_path_number is not None:
+            self.max_open_path_number = max_open_path_number
+        else:
+            self.max_open_path_number = None
+
         self.special_node_conversion = special_node_conversion
 
         self.left_bracket = left_bracket
@@ -82,6 +88,9 @@ class SyntacticNGramExtractor(PatternExtractor):
                 patterns.extend(local_patterns)
                 open_paths.append(local_paths)
 
+                if self.max_open_path_number is not None and len(open_paths) > self.max_open_path_number:
+                    return [], []
+
             still_open_paths = []
             for open_path_iter in itertools.product(*open_paths):
                 open_path = TokenSNGram(SNGram.Tree(tree.token, open_path_iter),
@@ -89,6 +98,9 @@ class SyntacticNGramExtractor(PatternExtractor):
 
                 self._add_path(open_path, still_open_paths, patterns)
                 self._add_special_path(tree, still_open_paths, patterns)
+
+                if self.max_open_path_number is not None and len(still_open_paths) > self.max_open_path_number:
+                    return [], []
 
         return still_open_paths, patterns
 

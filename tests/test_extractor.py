@@ -1,3 +1,5 @@
+import functools
+
 import pytest
 from pytest_cases import cases_generator, cases_data, THIS_MODULE
 
@@ -44,6 +46,19 @@ test_sentences = conllu.parse(
 12  lazy    lazy   ADJ    JJ   Degree=Pos                  13   amod    _   _
 13   dog     dog    NOUN   NN   Number=Sing                 9   nmod    _   SpaceAfter=No
 14  .       .      PUNCT  .    _                           9   punct   _   _
+
+# text = We have apples, pears, oranges, and bananas.
+1   We     we    PRON   PRP   Number=Plur   2   nsubj     _   _
+2   have   have  VERB    VBZ   Mood=Ind|Number=Plur|Person=1|Tense=Pres|VerbForm=Fin                  0   root    _   _
+3   apples   apple  NOUN    NN   Number=Plur                  2   obj    _   _
+4   ,     ,    PUNCT   ,   _                 5   punct   _   _
+5   pears     pear    NOUN   NN   Number=Plur                 3   conj   _   _
+6   ,     ,    PUNCT   ,   _    7   punct   _   _
+7   oranges     orange    NOUN   NN   Number=Plur                 3   conj   _   _
+8   ,     ,    PUNCT   ,   _                 10   punct   _   _
+9   and   and   SCONJ   CC  _   10   cc    _   _
+10  bananas    banana   NOUN    NN   Number=Plur                           3   conj    _   _
+11  .       .      PUNCT  .    _                           2   punct   _   _
 """
 )
 
@@ -314,6 +329,135 @@ test_data = {
             "number": 7
         },
     },
+    "We have apples, pears, oranges, and bananas.": {
+        "1_3_None": {
+            "ngrams": set([
+                "We",
+                ",",
+                "and",
+                ".",
+                "bananas [,, and]",
+                "oranges,",
+                "pears,"
+            ]),
+            ## "," appears 3 times in the pattern list
+            "number": 9
+        },
+        "1_3_conversion_function": {
+            "ngrams": set([
+                "We",
+                ",",
+                "and",
+                ".",
+                "bananas [,, and]",
+                "oranges,",
+                "pears,",
+                "obj",
+                "conj"
+            ]),
+            ## "," appears 3 times in the pattern list
+            ## conj appears 3 times in the pattern list
+            "number": 13
+        },
+        "2_3_None": {
+            "ngrams": set([
+                "bananas [,, and]",
+                "oranges,",
+                "pears,"
+            ]),
+            "number": 3
+        },
+        "2_3_conversion_function": {
+            "ngrams": set([
+                "bananas [,, and]",
+                "oranges,",
+                "pears,"
+            ]),
+            "number": 3
+        },
+        "2_4_None": {
+            "ngrams": set([
+                "bananas [,, and]",
+                "oranges,",
+                "pears,"
+            ]),
+            "number": 3
+        },
+        "2_4_conversion_function": {
+            "ngrams": set([
+                "bananas [,, and]",
+                "oranges,",
+                "pears,",
+                "have [We, obj, .]",
+                "apples [conj, conj, conj]",
+            ]),
+            "number": 5
+        },
+        "2_9_None": {
+            "ngrams": set([
+                "bananas [,, and]",
+                "oranges,",
+                "pears,",
+                "apples [pears,, oranges,, bananas [,, and]]",
+            ]),
+            "number": 4
+        },
+        "2_9_conversion_function": {
+            "ngrams": set([
+                "bananas [,, and]",
+                "oranges,",
+                "pears,",
+                "apples [pears,, oranges,, bananas [,, and]]",
+                "apples [conj, conj, conj]",
+                "apples [pears,, conj, conj]",
+                "apples [conj, oranges,, conj]",
+                "apples [conj, conj, bananas [,, and]]",
+                "apples [pears,, oranges,, conj]",
+                "apples [pears,, conj, bananas [,, and]]",
+                "apples [conj, oranges,, bananas [,, and]]",
+                "have [We, obj, .]",
+                "have [We, apples [conj, conj, conj], .]",
+                "have [We, apples [pears,, conj, conj], .]",
+                "have [We, apples [conj, oranges,, conj], .]",
+                "have [We, apples [conj, conj, bananas [,, and]], .]",
+                "have [We, apples [pears,, oranges,, conj], .]"
+            ]),
+            "number": 17
+        },
+        "2_10_None": {
+            "ngrams": set([
+                "bananas [,, and]",
+                "oranges,",
+                "pears,",
+                "apples [pears,, oranges,, bananas [,, and]]",
+            ]),
+            "number": 4
+        },
+        "2_10_conversion_function": {
+            "ngrams": set([
+                "bananas [,, and]",
+                "oranges,",
+                "pears,",
+                "apples [pears,, oranges,, bananas [,, and]]",
+                "apples [conj, conj, conj]",
+                "apples [pears,, conj, conj]",
+                "apples [conj, oranges,, conj]",
+                "apples [conj, conj, bananas [,, and]]",
+                "apples [pears,, oranges,, conj]",
+                "apples [pears,, conj, bananas [,, and]]",
+                "apples [conj, oranges,, bananas [,, and]]",
+                "have [We, obj, .]",
+                "have [We, apples [conj, conj, conj], .]",
+                "have [We, apples [pears,, conj, conj], .]",
+                "have [We, apples [conj, oranges,, conj], .]",
+                "have [We, apples [conj, conj, bananas [,, and]], .]",
+                "have [We, apples [pears,, conj, bananas [,, and]], .]",
+                "have [We, apples [conj, oranges,, bananas [,, and]], .]",
+                "have [We, apples [pears,, oranges,, conj], .]"
+            ]),
+            "number": 19
+        },
+    },
 }
 
 
@@ -358,9 +502,18 @@ def test_extracting_storing_all_paths(case_data):
 
     sentence, extractor, expected = case_data.get()
     extractor = SyntacticNGramExtractor(
-        min_size=extractor.min_size, max_size=extractor.max_size, special_node_conversion=extractor.special_node_conversion, max_open_path_size=None)
+        min_size=extractor.min_size, max_size=extractor.max_size, special_node_conversion=extractor.special_node_conversion, max_open_path_size=None, max_open_path_number=None)
     assert len([str(pattern.get_pattern_list(['form', 'function'])[0]) for pattern in extractor.extract_patterns(sentence)]) == expected['number']
 
+@cases_data(module=THIS_MODULE)
+def test_max_open_paths(case_data):
+
+    ## extract while only allowing one open path
+
+    sentence, extractor, expected = case_data.get()
+    extractor = SyntacticNGramExtractor(
+        min_size=extractor.min_size, max_size=extractor.max_size, special_node_conversion=extractor.special_node_conversion, max_open_path_number=1)
+    assert extractor.extract_patterns(sentence) == []
 
 
 def test_sentence_that_is_not_parseable():
