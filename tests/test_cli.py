@@ -190,20 +190,38 @@ def test_extract_patterns_with_phrases(parameters, expected_patterns, expected_b
     runner = CliRunner()
     with runner.isolated_filesystem():
 
+        patterns_list_filename = 'patterns.json'
+        base_list_filename = 'base.json'
+
         patterns_filename = 'patterns.json'
         base_filename = 'base.json'
 
-        result = runner.invoke(main, [
+        runner.invoke(main, [
             'extract-patterns',
             infile_path,
-            patterns_filename,
-            base_filename,
+            patterns_list_filename,
+            base_list_filename,
             'lemma'] + parameters +
             [
                 '--encoded_dictionaries',
                 dictfile_path
             ]
         )
+
+        runner.invoke(main, [
+            'utils',
+            'convert-pattern-list',
+            '--is_int',
+            base_list_filename,
+            base_filename
+        ])
+
+        runner.invoke(main, [
+            'utils',
+            'convert-pattern-list',
+            patterns_list_filename,
+            patterns_filename,
+        ])
 
         patterns = json.load(open(patterns_filename))
         basepatterns = json.load(open(base_filename))

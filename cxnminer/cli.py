@@ -165,34 +165,53 @@ def extract_patterns(ctx, infile, outfile_patterns, outfile_base,
         right_bracket=meta_symbols.get("]", None),
         comma=meta_symbols.get(",", None))
 
-    patterns = collections.defaultdict(set)
-    base_patterns = collections.defaultdict(list)
+    with open_file(infile) as infile:
+        with open_file(outfile_patterns, 'w') as outfile_patterns:
+            with open_file(outfile_base, 'w') as outfile_base:
 
+                for sentence_patterns in map(
+                        functools.partial(
+                            pattern_extraction, extractor=extractor, word_level=word_level, logger=ctx.obj['logger'],
+                            unknown=unknown, known=known),
+                        enumerate(conllu.parse_incr(infile))):
+
+                    for is_base_pattern, pattern, content in sentence_patterns:
+                        if not is_base_pattern:
+                            if not only_base:
+                                print("\t".join([pattern, str(content)]), file=outfile_patterns)
+                        else:
+                            print("\t".join([pattern, str(content)]), file=outfile_base)
+
+
+@main.group()
+@click.pass_context
+def utils(ctx):
+    pass
+
+
+@utils.command()
+@click.argument('infile')
+@click.argument('outfile')
+@click.option('--is_int', is_flag=True)
+@click.pass_context
+def convert_pattern_list(ctx, infile, outfile, is_int):
+
+    if is_int:
+        patterns = collections.defaultdict(list)
+    else:
+        patterns = collections.defaultdict(set)
 
     with open_file(infile) as infile:
+        for line in infile:
+            pattern, content = line.rstrip().split("\t")
 
-        for sentence_patterns in map(
-                functools.partial(
-                    pattern_extraction, extractor=extractor, word_level=word_level, logger=ctx.obj['logger'],
-                    unknown=unknown, known=known),
-                enumerate(conllu.parse_incr(infile))):
+            if is_int:
+                content = int(content)
+                patterns[pattern].append(content)
+            else:
+                patterns[pattern].add(content)
 
-            for is_base_pattern, pattern, content in sentence_patterns:
-                if not is_base_pattern:
-                    if content not in base_patterns:
-                        base_patterns[content] = ([])
-                    if not only_base:
-                        patterns[pattern].add(content)
-                else:
-                    base_patterns[pattern].append(content)
-
-
-    if not only_base:
+    with open_file(outfile, 'w') as outfile:
         for pattern in patterns.keys():
             patterns[pattern] = list(patterns[pattern])
-        with open_file(outfile_patterns, 'w') as outfile:
-            json.dump(patterns, outfile)
-
-    with open_file(outfile_base, 'w') as outfile:
-        json.dump(base_patterns, outfile)
-
+        json.dump(patterns, outfile)
