@@ -232,7 +232,13 @@ def convert_pattern_list(ctx, infile, outfile, is_int, remove_hapax):
 @click.argument('infile_patterns')
 @click.argument('infile_base')
 @click.argument('outfile')
-def add_pattern_stats(ctx, infile_patterns, infile_base, outfile):
+@click.option('--encoder')
+@click.option('--base_level')
+def add_pattern_stats(ctx, infile_patterns, infile_base, outfile, encoder, base_level):
+
+    if encoder is not None:
+        with open_file(encoder, 'rb') as encoder_file:
+            encoder = Base64Encoder(PatternEncoder.load(encoder_file), binary=False)
 
     base_patterns = []
     with open_file(infile_base) as infile:
@@ -262,6 +268,24 @@ def add_pattern_stats(ctx, infile_patterns, infile_base, outfile):
 
                 stats['frequency'] = frequency
                 stats['uif'] = base_hapax
+
+                if encoder is not None:
+                    decoded_pattern = encoder.decode(pattern)
+
+                    if base_level is not None:
+
+                        base_elements = 0
+                        non_base_elements = 0
+
+                        for element in decoded_pattern.get_element_list():
+                            ## skip meta elements
+                            if hasattr(element, "level"):
+                                if element.level == base_level:
+                                    base_elements += 1
+                                else:
+                                    non_base_elements += 1
+
+                        stats['schematicity'] = non_base_elements/(base_elements + non_base_elements)
 
                 json.dump((pattern, stats), o)
                 o.write("\n")
