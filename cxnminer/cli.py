@@ -229,6 +229,46 @@ def convert_pattern_list(ctx, infile, outfile, is_int, remove_hapax):
 
 @utils.command()
 @click.pass_context
+@click.argument('infile_patterns')
+@click.argument('infile_base')
+@click.argument('outfile')
+def add_pattern_stats(ctx, infile_patterns, infile_base, outfile):
+
+    base_patterns = []
+    with open_file(infile_base) as infile:
+
+        for line in infile:
+            _, sentences = json.loads(line)
+            base_patterns.append(sentences)
+
+
+    with open_file(infile_patterns) as infile:
+        with open_file(outfile, 'w') as o:
+
+            for line in infile:
+
+                pattern, base_ids = json.loads(line)
+
+                stats = {}
+                frequency = 0
+                base_hapax = 0
+
+                for base_id in base_ids:
+
+                    base_freq = len(base_patterns[base_id])
+                    frequency += base_freq
+                    if base_freq == 1:
+                        base_hapax += 1
+
+                stats['frequency'] = frequency
+                stats['uif'] = base_hapax
+
+                json.dump((pattern, stats), o)
+                o.write("\n")
+
+
+@utils.command()
+@click.pass_context
 @click.argument('infile')
 @click.argument('encoder')
 @click.argument('outfile')
