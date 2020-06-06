@@ -193,8 +193,9 @@ def utils(ctx):
 @click.argument('infile')
 @click.argument('outfile')
 @click.option('--is_int', is_flag=True)
+@click.option('--remove_hapax', is_flag=True)
 @click.pass_context
-def convert_pattern_list(ctx, infile, outfile, is_int):
+def convert_pattern_list(ctx, infile, outfile, is_int, remove_hapax):
 
     def write_pattern(pattern, contents, outfile):
         json.dump((pattern, contents), outfile)
@@ -214,12 +215,14 @@ def convert_pattern_list(ctx, infile, outfile, is_int):
                 if pattern != current_pattern:
 
                     if current_pattern is not None:
-                        write_pattern(current_pattern, contents, outfile)
+                        if not remove_hapax or len(contents) > 1:
+                            write_pattern(current_pattern, contents, outfile)
 
                     current_pattern = pattern
                     contents = []
 
                 contents.append(content)
 
-            write_pattern(current_pattern, contents, outfile)
+            if not remove_hapax or len(contents) > 1:
+                write_pattern(current_pattern, contents, outfile)
 
