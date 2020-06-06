@@ -400,6 +400,33 @@ def add_pattern_stats(ctx, infile_patterns, infile_base, outfile, encoder, base_
 
 @utils.command()
 @click.pass_context
+@click.argument('patterns')
+@click.argument('stats')
+@click.argument('feature')
+@click.argument('threshold', type=int)
+@click.argument('outfile')
+def filter_patterns(ctx, patterns, stats, feature, threshold, outfile):
+
+    keep = set()
+    with open_file(stats) as infile:
+        for line in infile:
+            pattern, stats = json.loads(line)
+            if stats.get(feature, 0) >= threshold:
+                keep.add(pattern)
+
+
+    with open_file(infile_patterns) as infile:
+        with open_file(outfile, 'w') as o:
+
+            for line in infile:
+
+                pattern, _ = json.loads(line)
+
+                if pattern in keep:
+                    o.write(line)
+
+@utils.command()
+@click.pass_context
 @click.argument('infile')
 @click.argument('encoder')
 @click.argument('outfile')
