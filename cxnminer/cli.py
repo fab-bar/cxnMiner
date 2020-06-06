@@ -5,6 +5,7 @@ import itertools
 import json
 import logging
 import logging.config
+import math
 
 import click
 import conllu
@@ -299,19 +300,29 @@ def get_pattern_type_freq(ctx, infile_patterns, encoder, outfile):
 @click.argument('outfile')
 @click.option('--encoder')
 @click.option('--base_level')
-def add_pattern_stats(ctx, infile_patterns, infile_base, outfile, encoder, base_level):
+@click.option('--vocabulary_probs')
+@click.option('--pattern_profile_frequency')
+def add_pattern_stats(ctx, infile_patterns, infile_base, outfile, encoder, base_level,
+                      vocabulary_probs, pattern_profile_frequency):
 
     if encoder is not None:
         with open_file(encoder, 'rb') as encoder_file:
             encoder = Base64Encoder(PatternEncoder.load(encoder_file), binary=False)
 
-    base_patterns = []
+    base_patterns = {}
     with open_file(infile_base) as infile:
 
         for line in infile:
-            _, sentences = json.loads(line)
-            base_patterns.append(sentences)
+            pattern, sentences = json.loads(line)
+            base_patterns[pattern] = len(sentences)
 
+    if pattern_profile_frequency is not None:
+        with open_file(pattern_profile_frequency, 'r') as infile:
+            pattern_profile_frequency = json.load(infile)
+
+    if vocabulary_probs is not None:
+        with open_file(vocabulary_probs, 'r') as infile:
+            vocabulary_probs = json.load(infile)
 
     with open_file(infile_patterns) as infile:
         with open_file(outfile, 'w') as o:
@@ -326,7 +337,7 @@ def add_pattern_stats(ctx, infile_patterns, infile_base, outfile, encoder, base_
 
                 for base_id in base_ids:
 
-                    base_freq = len(base_patterns[base_id])
+                    base_freq = base_patterns[base_id]
                     frequency += base_freq
                     if base_freq == 1:
                         base_hapax += 1
@@ -351,6 +362,28 @@ def add_pattern_stats(ctx, infile_patterns, infile_base, outfile, encoder, base_
                                     non_base_elements += 1
 
                         stats['schematicity'] = non_base_elements/(base_elements + non_base_elements)
+
+                    if pattern_profile_frequency is not None:
+                        pattern_type = decoded_pattern.get_pattern_profile()
+                        stats["log_pattern_probability"] = math.log(frequency/pattern_profile_frequency[pattern_type])
+
+                    if vocabulary_probs is not None:
+
+                        prob = 0
+
+                        for element in decoded_pattern.get_element_list():
+                            ## skip meta elements (and unknown?)
+                            if hasattr(element, "level"):
+                                level_probs = vocabulary_probs[element.level]
+                                prob += math.log(level_probs[0].get(element.form, level_probs[1]))
+
+                        stats["log_unigram_probability"] = prob
+
+                if "log_pattern_probability" in stats and "log_unigram_probability" in stats:
+                    stats["pmi"] = stats["log_pattern_probability"] - stats["log_unigram_probability"]
+
+                if "pmi" in stats and "uif" in stats:
+                    stats["uif-pmi"] = stats["uif"]*stats["pmi"]
 
                 json.dump((pattern, stats), o)
                 o.write("\n")
