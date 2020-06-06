@@ -301,25 +301,28 @@ def get_pattern_type_freq(ctx, infile_patterns, encoder, outfile):
 @utils.command()
 @click.pass_context
 @click.argument('infile_patterns')
-@click.argument('infile_base')
 @click.argument('outfile')
+@click.option('--known_stats')
+@click.option('--base_patterns')
 @click.option('--encoder')
 @click.option('--base_level')
 @click.option('--vocabulary_probs')
 @click.option('--pattern_profile_frequency')
-def add_pattern_stats(ctx, infile_patterns, infile_base, outfile, encoder, base_level,
+def add_pattern_stats(ctx, infile_patterns, outfile, known_stats, base_patterns, encoder, base_level,
                       vocabulary_probs, pattern_profile_frequency):
 
     if encoder is not None:
         with open_file(encoder, 'rb') as encoder_file:
             encoder = Base64Encoder(PatternEncoder.load(encoder_file), binary=False)
 
-    base_patterns = {}
-    with open_file(infile_base) as infile:
+    if base_patterns is not None:
+        with open_file(base_patterns) as infile:
 
-        for line in infile:
-            pattern, sentences = json.loads(line)
-            base_patterns[pattern] = len(sentences)
+            base_patterns = {}
+
+            for line in infile:
+                pattern, sentences = json.loads(line)
+                base_patterns[pattern] = len(sentences)
 
     if pattern_profile_frequency is not None:
         with open_file(pattern_profile_frequency, 'r') as infile:
@@ -328,6 +331,17 @@ def add_pattern_stats(ctx, infile_patterns, infile_base, outfile, encoder, base_
     if vocabulary_probs is not None:
         with open_file(vocabulary_probs, 'r') as infile:
             vocabulary_probs = json.load(infile)
+
+    if known_stats is not None:
+
+        with open_file(known_stats) as infile:
+
+            known_stats = {}
+
+            for line in infile:
+                pattern, stats = json.loads(line)
+                known_stats[pattern] = stats
+
 
     number = 0
     with open_file(infile_patterns) as infile:
@@ -341,18 +355,21 @@ def add_pattern_stats(ctx, infile_patterns, infile_base, outfile, encoder, base_
                 pattern, base_ids = json.loads(line)
 
                 stats = {}
-                frequency = 0
-                base_hapax = 0
+                if known_stats is not None:
+                    stats = known_stats.get(pattern)
 
-                for base_id in base_ids:
+                if base_patterns is not None:
+                    frequency = 0
+                    base_hapax = 0
 
-                    base_freq = base_patterns[base_id]
-                    frequency += base_freq
-                    if base_freq == 1:
-                        base_hapax += 1
+                    for base_id in base_ids:
 
-                stats['frequency'] = frequency
-                stats['uif'] = base_hapax
+                        base_freq = base_patterns[base_id]
+                        frequency += base_freq
+                        if base_freq == 1:
+                            base_hapax += 1
+                    stats['frequency'] = frequency
+                    stats['uif'] = base_hapax
 
                 if encoder is not None:
                     decoded_pattern = encoder.decode(pattern)
@@ -372,9 +389,9 @@ def add_pattern_stats(ctx, infile_patterns, infile_base, outfile, encoder, base_
 
                         stats['schematicity'] = non_base_elements/(base_elements + non_base_elements)
 
-                    if pattern_profile_frequency is not None:
+                    if pattern_profile_frequency is not None and "frequency" in stats:
                         pattern_type = decoded_pattern.get_pattern_profile()
-                        stats["log_pattern_probability"] = math.log(frequency/pattern_profile_frequency[pattern_type])
+                        stats["log_pattern_probability"] = math.log(stats["frequency"]/pattern_profile_frequency[pattern_type])
 
                     if vocabulary_probs is not None:
 
@@ -415,7 +432,7 @@ def filter_patterns(ctx, patterns, stats, feature, threshold, outfile):
                 keep.add(pattern)
 
 
-    with open_file(infile_patterns) as infile:
+    with open_file(patterns) as infile:
         with open_file(outfile, 'w') as o:
 
             for line in infile:
