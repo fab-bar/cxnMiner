@@ -296,6 +296,73 @@ def get_pattern_type_freq(ctx, infile_patterns, encoder, outfile):
         json.dump(pattern_types, o)
 
 
+def get_stats(line, known_stats, base_patterns, encoder, base_level, pattern_profile_frequency,
+              vocabulary_probs
+):
+
+    pattern, base_ids = json.loads(line)
+
+    stats = {}
+    if known_stats is not None:
+        stats = known_stats.get(pattern)
+
+    if base_patterns is not None:
+        frequency = 0
+        base_hapax = 0
+
+        for base_id in base_ids:
+
+            base_freq = base_patterns[base_id]
+            frequency += base_freq
+            if base_freq == 1:
+                base_hapax += 1
+        stats['frequency'] = frequency
+        stats['uif'] = base_hapax
+
+    if encoder is not None:
+        decoded_pattern = encoder.decode(pattern)
+
+        if base_level is not None:
+
+            base_elements = 0
+            non_base_elements = 0
+
+            for element in decoded_pattern.get_element_list():
+                ## skip meta elements
+                if hasattr(element, "level"):
+                    if element.level == base_level:
+                        base_elements += 1
+                    else:
+                        non_base_elements += 1
+
+            stats['schematicity'] = non_base_elements/(base_elements + non_base_elements)
+
+        pattern_type = decoded_pattern.get_pattern_profile()
+        stats["pattern_profile"] = pattern_type
+
+        if vocabulary_probs is not None:
+
+            prob = 0
+
+            for element in decoded_pattern.get_element_list():
+                ## skip meta elements (and unknown?)
+                if hasattr(element, "level"):
+                    level_probs = vocabulary_probs[element.level]
+                    prob += math.log(level_probs[0].get(element.form, level_probs[1]))
+
+            stats["log_unigram_probability"] = prob
+
+    if pattern_profile_frequency is not None and "pattern_profile" in stats and "frequency" in stats:
+        stats["log_pattern_probability"] = math.log(stats["frequency"]/pattern_profile_frequency[stats["pattern_profile"]])
+
+    if "log_pattern_probability" in stats and "log_unigram_probability" in stats:
+        stats["pmi"] = stats["log_pattern_probability"] - stats["log_unigram_probability"]
+
+    if "pmi" in stats and "uif" in stats:
+        stats["uif-pmi"] = stats["uif"]*stats["pmi"]
+
+    return pattern, stats
+
 
 
 @utils.command()
@@ -342,74 +409,23 @@ def add_pattern_stats(ctx, infile_patterns, outfile, known_stats, base_patterns,
                 pattern, stats = json.loads(line)
                 known_stats[pattern] = stats
 
-
     number = 0
     with open_file(infile_patterns) as infile:
         with open_file(outfile, 'w') as o:
 
-            for line in infile:
+            for pattern, stats in map(
+                    functools.partial(get_stats,
+                                      known_stats=known_stats,
+                                      base_patterns=base_patterns,
+                                      encoder=encoder,
+                                      base_level=base_level,
+                                      pattern_profile_frequency=pattern_profile_frequency,
+                                      vocabulary_probs=vocabulary_probs
+                    ),
+                    infile):
 
                 number += 1
                 ctx.obj['logger'].info("Pattern " + str(number))
-
-                pattern, base_ids = json.loads(line)
-
-                stats = {}
-                if known_stats is not None:
-                    stats = known_stats.get(pattern)
-
-                if base_patterns is not None:
-                    frequency = 0
-                    base_hapax = 0
-
-                    for base_id in base_ids:
-
-                        base_freq = base_patterns[base_id]
-                        frequency += base_freq
-                        if base_freq == 1:
-                            base_hapax += 1
-                    stats['frequency'] = frequency
-                    stats['uif'] = base_hapax
-
-                if encoder is not None:
-                    decoded_pattern = encoder.decode(pattern)
-
-                    if base_level is not None:
-
-                        base_elements = 0
-                        non_base_elements = 0
-
-                        for element in decoded_pattern.get_element_list():
-                            ## skip meta elements
-                            if hasattr(element, "level"):
-                                if element.level == base_level:
-                                    base_elements += 1
-                                else:
-                                    non_base_elements += 1
-
-                        stats['schematicity'] = non_base_elements/(base_elements + non_base_elements)
-
-                    if pattern_profile_frequency is not None and "frequency" in stats:
-                        pattern_type = decoded_pattern.get_pattern_profile()
-                        stats["log_pattern_probability"] = math.log(stats["frequency"]/pattern_profile_frequency[pattern_type])
-
-                    if vocabulary_probs is not None:
-
-                        prob = 0
-
-                        for element in decoded_pattern.get_element_list():
-                            ## skip meta elements (and unknown?)
-                            if hasattr(element, "level"):
-                                level_probs = vocabulary_probs[element.level]
-                                prob += math.log(level_probs[0].get(element.form, level_probs[1]))
-
-                        stats["log_unigram_probability"] = prob
-
-                if "log_pattern_probability" in stats and "log_unigram_probability" in stats:
-                    stats["pmi"] = stats["log_pattern_probability"] - stats["log_unigram_probability"]
-
-                if "pmi" in stats and "uif" in stats:
-                    stats["uif-pmi"] = stats["uif"]*stats["pmi"]
 
                 json.dump((pattern, stats), o)
                 o.write("\n")
