@@ -196,22 +196,30 @@ def utils(ctx):
 @click.pass_context
 def convert_pattern_list(ctx, infile, outfile, is_int):
 
-    if is_int:
-        patterns = collections.defaultdict(list)
-    else:
-        patterns = collections.defaultdict(set)
+    def write_pattern(pattern, contents, outfile):
+        json.dump((pattern, contents), outfile)
+        outfile.write("\n")
 
     with open_file(infile) as infile:
-        for line in infile:
-            pattern, content = line.rstrip().split("\t")
+        with open_file(outfile, 'w') as outfile:
 
-            if is_int:
-                content = int(content)
-                patterns[pattern].append(content)
-            else:
-                patterns[pattern].add(content)
+            current_pattern = None
+            contents = []
 
-    with open_file(outfile, 'w') as outfile:
-        for pattern in patterns.keys():
-            json.dump([pattern, list(patterns[pattern])], outfile)
-            outfile.write("\n")
+            for line in infile:
+                pattern, content = line.rstrip().split("\t")
+                if is_int:
+                    content = int(content)
+
+                if pattern != current_pattern:
+
+                    if current_pattern is not None:
+                        write_pattern(current_pattern, contents, outfile)
+
+                    current_pattern = pattern
+                    contents = []
+
+                contents.append(content)
+
+            write_pattern(current_pattern, contents, outfile)
+

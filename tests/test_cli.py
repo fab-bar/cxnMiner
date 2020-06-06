@@ -190,8 +190,8 @@ def test_extract_patterns_with_phrases(parameters, expected_patterns, expected_b
     runner = CliRunner()
     with runner.isolated_filesystem():
 
-        patterns_list_filename = 'patterns.json'
-        base_list_filename = 'base.json'
+        patterns_list_filename = 'patterns_sorted.json'
+        base_list_filename = 'base_sorted.json'
 
         patterns_filename = 'patterns.json'
         base_filename = 'base.json'
@@ -207,6 +207,22 @@ def test_extract_patterns_with_phrases(parameters, expected_patterns, expected_b
                 dictfile_path
             ]
         )
+
+        # files need to be sorted
+        for filename in [patterns_list_filename, base_list_filename]:
+            with open(filename, 'r') as pattern_file:
+                lines = [line.rstrip() for line in pattern_file]
+                ## patterns list needs sorted with unique
+                if filename == patterns_list_filename:
+                    lines = set(lines)
+                patterns = sorted(lines)
+
+            with open(filename, 'w') as pattern_file:
+                pattern_file.write('\n'.join(patterns) + '\n')
+
+        with open(patterns_list_filename, 'r') as pattern_file:
+            patterns = [line.rstrip() for line in pattern_file]
+            print('\n'.join(patterns))
 
         runner.invoke(main, [
             'utils',
