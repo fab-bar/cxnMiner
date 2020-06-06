@@ -6,6 +6,7 @@ import json
 import logging
 import logging.config
 import math
+import multiprocessing
 import pickle
 
 import click
@@ -459,12 +460,18 @@ def filter_patterns(ctx, patterns, stats, feature, threshold, outfile):
                 if pattern in keep:
                     o.write(line)
 
+def decode_pattern(line, pattern_encoder):
+
+    pattern, _ = json.loads(line)
+    return pattern, pattern_encoder.decode(pattern)
+
 @utils.command()
 @click.pass_context
 @click.argument('infile')
 @click.argument('encoder')
 @click.argument('outfile')
-def decode_patterns(ctx, infile, encoder, outfile):
+@click.option('--processes', type=int, default=1)
+def decode_patterns(ctx, infile, encoder, outfile, processes):
 
     with open_file(encoder, 'rb') as encoder_file:
         pattern_encoder = Base64Encoder(PatternEncoder.load(encoder_file), binary=False)
@@ -472,13 +479,16 @@ def decode_patterns(ctx, infile, encoder, outfile):
     with open_file(infile) as infile:
         with open_file(outfile, 'wb') as o:
 
-            for line in infile:
+            with multiprocessing.Pool(processes) as p:
 
-                pattern, content = json.loads(line)
-                decoded_pattern = pattern_encoder.decode(pattern)
+                for pattern, decoded_pattern in p.imap(
+                        functools.partial(decode_pattern,
+                                          pattern_encoder=pattern_encoder
+                        ),
+                        infile, chunksize=1000):
 
-                ctx.obj['logger'].info("Pattern")
-                pickle.dump((pattern, decoded_pattern), o)
+                    ctx.obj['logger'].info("Pattern")
+                    pickle.dump((pattern, decoded_pattern), o)
 
 
 @utils.command()
