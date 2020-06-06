@@ -277,9 +277,14 @@ def get_pattern_type_freq(ctx, infile_patterns, encoder, outfile):
 
     pattern_types = collections.defaultdict(int)
 
+    number = 0
+
     with open_file(infile_patterns) as infile:
 
         for line in infile:
+
+            number += 1
+            ctx.obj['logger'].info("Pattern " + str(number))
             pattern, _ = json.loads(line)
             decoded_pattern = encoder.decode(pattern)
             pattern_type = decoded_pattern.get_pattern_profile()
@@ -324,10 +329,14 @@ def add_pattern_stats(ctx, infile_patterns, infile_base, outfile, encoder, base_
         with open_file(vocabulary_probs, 'r') as infile:
             vocabulary_probs = json.load(infile)
 
+    number = 0
     with open_file(infile_patterns) as infile:
         with open_file(outfile, 'w') as o:
 
             for line in infile:
+
+                number += 1
+                ctx.obj['logger'].info("Pattern " + str(number))
 
                 pattern, base_ids = json.loads(line)
 
