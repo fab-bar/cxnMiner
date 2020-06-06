@@ -1,4 +1,5 @@
 import abc
+import hashlib
 import itertools
 
 class Pattern(metaclass=abc.ABCMeta):
@@ -21,6 +22,19 @@ class Pattern(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def from_element_list(cls, element_list):
         pass # pragma: no cover
+
+    def get_pattern_profile(self, get_hash=True):
+
+        if isinstance(self, TokenPattern):
+            raise TypeError("TokenPattern has no profile")
+
+        pattern_type = " ".join([getattr(element, "level", element) for element in self.get_element_list()])
+
+        if get_hash:
+            return hashlib.md5(pattern_type.encode()).hexdigest()
+        else:
+            return pattern_type
+
 
 class TokenPattern(metaclass=abc.ABCMeta):
     """TokenPattern contain tokens with additional features (representad as dictionary)."""

@@ -229,6 +229,71 @@ def convert_pattern_list(ctx, infile, outfile, is_int, remove_hapax):
 
 @utils.command()
 @click.pass_context
+@click.argument('vocabulary')
+@click.argument('outfile')
+@click.option('--add_smoothing', type=float, default=1, show_default=True)
+def get_vocabulary_probs(ctx, vocabulary, outfile, add_smoothing):
+
+
+    try:
+        vocabularies = json.loads(vocabulary)
+    except json.JSONDecodeError:
+        with open_file(vocabulary) as dict_file:
+            vocabularies = json.load(dict_file)
+
+    vocabularies_probs = {}
+
+    for level in vocabularies:
+
+        freq = 0
+        entries = len(vocabularies[level])
+
+        probs = {}
+
+        for entry in vocabularies[level]:
+
+            freq += vocabularies[level][entry]
+
+        for entry in vocabularies[level]:
+
+            probs[entry] = (vocabularies[level][entry] + add_smoothing)/(freq + add_smoothing*entries)
+
+        vocabularies_probs[level] = (probs, add_smoothing/(freq + add_smoothing*entries))
+
+    with open_file(outfile, 'w') as o:
+        json.dump(vocabularies_probs, o)
+
+
+@utils.command()
+@click.pass_context
+@click.argument('infile_patterns')
+@click.argument('encoder')
+@click.argument('outfile')
+def get_pattern_type_freq(ctx, infile_patterns, encoder, outfile):
+
+    with open_file(encoder, 'rb') as encoder_file:
+        encoder = Base64Encoder(PatternEncoder.load(encoder_file), binary=False)
+
+    pattern_types = collections.defaultdict(int)
+
+    with open_file(infile_patterns) as infile:
+
+        for line in infile:
+            pattern, _ = json.loads(line)
+            decoded_pattern = encoder.decode(pattern)
+            pattern_type = decoded_pattern.get_pattern_profile()
+
+            pattern_types[pattern_type] += 1
+
+    print(len(pattern_types))
+    with open_file(outfile, 'w') as o:
+        json.dump(pattern_types, o)
+
+
+
+
+@utils.command()
+@click.pass_context
 @click.argument('infile_patterns')
 @click.argument('infile_base')
 @click.argument('outfile')

@@ -28,7 +28,8 @@ def case_fox():
             SNGram.COMMA,
             PatternElement('brown', 'form', 3),
             SNGram.RIGHT_BRACKET
-        ]
+        ],
+        "profiles": set(["form [ form , form , form ]"])
     }
 
 
@@ -54,7 +55,8 @@ def case_dog():
             SNGram.COMMA,
             PatternElement('lazy', 'form', 8),
             SNGram.RIGHT_BRACKET
-        ]
+        ],
+        "profiles": set(["form [ form , form , form ]"])
     }
 
 
@@ -100,7 +102,8 @@ def case_jumps():
             SNGram.COMMA,
             PatternElement('.', 'form', 10),
             SNGram.RIGHT_BRACKET
-        ]
+        ],
+        "profiles": set(["form [ form [ form , form , form ] , form [ form , form , form ] , form ]"])
     }
 
 def case_jumps_phrases():
@@ -166,7 +169,8 @@ def case_jumps_phrases():
             SNGram.COMMA,
             PatternElement('.', 'form', 10),
             SNGram.RIGHT_BRACKET
-        ]
+        ],
+        "profiles": set(["form [ form , form , form ]"])
     }
 
 def case_changed_special():
@@ -192,7 +196,8 @@ def case_changed_special():
             "_",
             PatternElement('brown', 'form', 3),
             ")"
-        ]
+        ],
+        "profiles": set(["form ( form _ form _ form )"])
     }
 
 
@@ -221,7 +226,8 @@ def case_sidorov1():
             SNGram.COMMA,
             PatternElement('de', 'form', 5),
             SNGram.RIGHT_BRACKET
-        ]
+        ],
+        "profiles": set(["form form form [ form , form ]"])
     }
 
 def case_sidorov2():
@@ -248,7 +254,8 @@ def case_sidorov2():
             SNGram.COMMA,
             PatternElement('de_mala_gana', 'form', 5),
             SNGram.RIGHT_BRACKET
-        ]
+        ],
+        "profiles": set(["form form [ form , form , form ]"])
     }
 
 def case_apples():
@@ -284,7 +291,8 @@ def case_apples():
             PatternElement('and', 'form', 7),
             SNGram.RIGHT_BRACKET,
             SNGram.RIGHT_BRACKET
-        ]
+        ],
+        "profiles": set(["form [ form form , form form , form [ form , form ] ]"])
     }
 
 @cases_data(module=THIS_MODULE)
@@ -337,3 +345,23 @@ def test_tsngram_pattern_list(case_data, feature):
         'repr_full',
         expected['repr']
     )
+
+
+@cases_data(module=THIS_MODULE)
+def test_tsngram_get_pattern_profile(case_data):
+
+    sngram, _ = case_data.get()
+
+    with pytest.raises(TypeError):
+        sngram.get_pattern_profile()
+
+
+@cases_data(module=THIS_MODULE)
+def test_sngram_get_pattern_profile(case_data):
+
+    sngram, expected = case_data.get()
+
+    for pattern in sngram.get_pattern_list(['form']):
+
+        assert pattern.get_pattern_profile(False) in expected.get("profiles", set())
+
