@@ -6,6 +6,7 @@ import json
 import logging
 import logging.config
 import math
+import pickle
 
 import click
 import conllu
@@ -457,6 +458,28 @@ def filter_patterns(ctx, patterns, stats, feature, threshold, outfile):
 
                 if pattern in keep:
                     o.write(line)
+
+@utils.command()
+@click.pass_context
+@click.argument('infile')
+@click.argument('encoder')
+@click.argument('outfile')
+def decode_patterns(ctx, infile, encoder, outfile):
+
+    with open_file(encoder, 'rb') as encoder_file:
+        pattern_encoder = Base64Encoder(PatternEncoder.load(encoder_file), binary=False)
+
+    with open_file(infile) as infile:
+        with open_file(outfile, 'wb') as o:
+
+            for line in infile:
+
+                pattern, content = json.loads(line)
+                decoded_pattern = pattern_encoder.decode(pattern)
+
+                ctx.obj['logger'].info("Pattern")
+                pickle.dump((pattern, decoded_pattern), o)
+
 
 @utils.command()
 @click.pass_context
