@@ -270,28 +270,36 @@ def get_vocabulary_probs(ctx, vocabulary, outfile, add_smoothing):
 @utils.command()
 @click.pass_context
 @click.argument('infile_patterns')
-@click.argument('encoder')
+@click.argument('frequency_stats')
 @click.argument('outfile')
-def get_pattern_type_freq(ctx, infile_patterns, encoder, outfile):
-
-    with open_file(encoder, 'rb') as encoder_file:
-        encoder = Base64Encoder(PatternEncoder.load(encoder_file), binary=False)
+def get_pattern_type_freq(ctx, infile_patterns, frequency_stats, outfile):
 
     pattern_types = collections.defaultdict(int)
 
     number = 0
 
-    with open_file(infile_patterns) as infile:
+    stats = {}
+
+    with open_file(frequency_stats) as infile:
 
         for line in infile:
+            pattern, pstats = json.loads(line)
+            stats[pattern] = pstats
 
-            number += 1
-            ctx.obj['logger'].info("Pattern " + str(number))
-            pattern, _ = json.loads(line)
-            decoded_pattern = encoder.decode(pattern)
-            pattern_type = decoded_pattern.get_pattern_profile()
+    with open_file(infile_patterns, 'rb') as infile:
 
-            pattern_types[pattern_type] += 1
+        while True:
+            try:
+                pattern, decoded_pattern = pickle.load(infile)
+
+                number += 1
+                ctx.obj['logger'].info("Pattern " + str(number))
+                pattern_type = decoded_pattern.get_pattern_profile()
+
+                pattern_types[pattern_type] += stats.get(pattern, {}).get('frequency', 1)
+            except EOFError:
+                break
+
 
     print(len(pattern_types))
     with open_file(outfile, 'w') as o:
@@ -362,6 +370,8 @@ def get_stats(line, known_stats, base_patterns, encoder, base_level, pattern_pro
 
     if "pmi" in stats and "uif" in stats:
         stats["uif-pmi"] = stats["uif"]*stats["pmi"]
+
+
 
     return pattern, stats
 
