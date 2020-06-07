@@ -306,9 +306,7 @@ def get_pattern_type_freq(ctx, infile_patterns, frequency_stats, outfile):
         json.dump(pattern_types, o)
 
 
-def get_stats(line, known_stats, base_patterns, encoder, base_level, pattern_profile_frequency,
-              vocabulary_probs
-):
+def get_stats(line, decoded_patterns, known_stats, base_patterns, base_level, pattern_profile_frequency, vocabulary_probs):
 
     pattern, base_ids = json.loads(line)
 
@@ -329,8 +327,11 @@ def get_stats(line, known_stats, base_patterns, encoder, base_level, pattern_pro
         stats['frequency'] = frequency
         stats['uif'] = base_hapax
 
-    if encoder is not None:
-        decoded_pattern = encoder.decode(pattern)
+    decoded_pattern = None
+    if decoded_patterns is not None:
+        decoded_pattern = decoded_patterns.get(pattern, None)
+
+    if decoded_pattern is not None:
 
         if base_level is not None:
 
@@ -371,11 +372,7 @@ def get_stats(line, known_stats, base_patterns, encoder, base_level, pattern_pro
     if "pmi" in stats and "uif" in stats:
         stats["uif-pmi"] = stats["uif"]*stats["pmi"]
 
-
-
     return pattern, stats
-
-
 
 @utils.command()
 @click.pass_context
@@ -383,16 +380,25 @@ def get_stats(line, known_stats, base_patterns, encoder, base_level, pattern_pro
 @click.argument('outfile')
 @click.option('--known_stats')
 @click.option('--base_patterns')
-@click.option('--encoder')
+@click.option('--decoded_patterns')
 @click.option('--base_level')
 @click.option('--vocabulary_probs')
 @click.option('--pattern_profile_frequency')
-def add_pattern_stats(ctx, infile_patterns, outfile, known_stats, base_patterns, encoder, base_level,
+def add_pattern_stats(ctx, infile_patterns, outfile, known_stats, base_patterns, decoded_patterns, base_level,
                       vocabulary_probs, pattern_profile_frequency):
 
-    if encoder is not None:
-        with open_file(encoder, 'rb') as encoder_file:
-            encoder = Base64Encoder(PatternEncoder.load(encoder_file), binary=False)
+
+    if decoded_patterns is not None:
+        with open_file(decoded_patterns, 'rb') as infile:
+
+            decoded_patterns = {}
+
+            while True:
+                try:
+                    pattern, decoded_pattern = pickle.load(infile)
+                    decoded_patterns[pattern] = decoded_pattern
+                except EOFError:
+                    break
 
     if base_patterns is not None:
         with open_file(base_patterns) as infile:
@@ -427,9 +433,9 @@ def add_pattern_stats(ctx, infile_patterns, outfile, known_stats, base_patterns,
 
             for pattern, stats in map(
                     functools.partial(get_stats,
+                                      decoded_patterns=decoded_patterns,
                                       known_stats=known_stats,
                                       base_patterns=base_patterns,
-                                      encoder=encoder,
                                       base_level=base_level,
                                       pattern_profile_frequency=pattern_profile_frequency,
                                       vocabulary_probs=vocabulary_probs
