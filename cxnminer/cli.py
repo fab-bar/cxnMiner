@@ -546,6 +546,39 @@ def get_top_n(ctx, patterns_file, pattern_stats, stat, n, outfile):
 
 @utils.command()
 @click.pass_context
+@click.argument('patterns_file')
+@click.argument('base_patterns_file')
+@click.argument('n', type=int)
+@click.argument('outfile')
+def get_top_n_base_patterns(ctx, patterns_file, base_patterns_file, n, outfile):
+
+    with open_file(base_patterns_file) as infile:
+
+        base_patterns = {}
+
+        for line in infile:
+            pattern, sentences = json.loads(line)
+            base_patterns[pattern] = len(sentences)
+
+    with open_file(patterns_file) as infile:
+        with open_file(outfile, 'w') as o:
+
+            for line in infile:
+
+                pattern, content = json.loads(line)
+                bp = content['base_patterns']
+
+                if len(bp) > n:
+                    bp = sorted(bp, key=lambda pattern: base_patterns[pattern], reverse=True)[:n]
+
+                content['base_patterns'] = bp
+
+                json.dump([pattern, content], o)
+                o.write("\n")
+
+
+@utils.command()
+@click.pass_context
 @click.argument('infile')
 @click.argument('encoder')
 @click.argument('outfile')
