@@ -550,7 +550,8 @@ def get_top_n(ctx, patterns_file, pattern_stats, stat, n, outfile):
 @click.argument('base_patterns_file')
 @click.argument('n', type=int)
 @click.argument('outfile')
-def get_top_n_base_patterns(ctx, patterns_file, base_patterns_file, n, outfile):
+@click.option('--corpus')
+def get_top_n_base_patterns(ctx, patterns_file, base_patterns_file, n, outfile, corpus):
 
     with open_file(base_patterns_file) as infile:
 
@@ -570,6 +571,36 @@ def get_top_n_base_patterns(ctx, patterns_file, base_patterns_file, n, outfile):
 
                 if len(bp) > n:
                     bp = sorted(bp, key=lambda pattern: base_patterns[pattern], reverse=True)[:n]
+
+                if corpus:
+
+                    bp_set = set(bp)
+                    bp_example_id = {}
+                    with open_file(base_patterns_file) as basefile:
+
+                        for baseline in basefile:
+                            bpattern, sentences = json.loads(baseline)
+                            if bpattern in bp_set:
+                                # I have added 1 to the id
+                                bp_example_id[bpattern] = sorted(sentences)[0] - 1
+
+                                ## stop sanning base pattern file if I have all base patterns
+                                bp_set.remove(bpattern)
+                                if not bp_set:
+                                    break
+
+
+                    bp_with_examples = []
+                    for base_pattern in bp:
+
+                        with open_file(corpus) as corpusfile:
+
+                            for sent_id, sentence in enumerate(conllu.parse_incr(corpusfile)):
+                                if sent_id == bp_example_id[base_pattern]:
+                                    bp_with_examples.append((base_pattern, " ".join([token['form'] for token in sentence])))
+                                    break
+
+                    bp = bp_with_examples
 
                 content['base_patterns'] = bp
 
