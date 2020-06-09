@@ -1,3 +1,4 @@
+import base64
 import collections
 import collections.abc
 import functools
@@ -265,6 +266,7 @@ def get_vocabulary_probs(ctx, vocabulary, outfile, add_smoothing):
 
     with open_file(outfile, 'w') as o:
         json.dump(vocabularies_probs, o)
+
 
 
 @utils.command()
@@ -547,7 +549,8 @@ def get_top_n(ctx, patterns_file, pattern_stats, stat, n, outfile):
 @click.argument('infile')
 @click.argument('encoder')
 @click.argument('outfile')
-def decode_pattern_collection(ctx, infile, encoder, outfile):
+@click.option('--string', is_flag=True)
+def decode_pattern_collection(ctx, infile, encoder, outfile, string):
 
     with open_file(encoder, 'rb') as encoder_file:
         pattern_encoder = Base64Encoder(PatternEncoder.load(encoder_file), binary=False)
@@ -560,6 +563,11 @@ def decode_pattern_collection(ctx, infile, encoder, outfile):
                 pattern, content = json.loads(line)
                 decoded_pattern = pattern_encoder.decode(pattern)
 
-                json.dump((str(decoded_pattern), content), o)
+                if string:
+                    out_pattern = str(decoded_pattern)
+                else:
+                    out_pattern = base64.b64encode(pickle.dumps(decoded_pattern)).decode('ascii')
+
+                json.dump((out_pattern, content), o)
                 o.write("\n")
 
