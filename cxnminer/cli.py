@@ -538,7 +538,7 @@ def get_top_n(ctx, patterns_file, pattern_stats, stat, n, outfile):
 
     with open_file(outfile, 'w') as o:
         for pattern, value in sorted(patterns.items(), key=lambda item: item[1][0]):
-            json.dump([pattern, value[1]], o)
+            json.dump([pattern, {'stats': pattern_stats[pattern], 'base_patterns': value[1]}], o)
             o.write("\n")
 
 
