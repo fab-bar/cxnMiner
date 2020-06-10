@@ -614,7 +614,8 @@ def get_top_n_base_patterns(ctx, patterns_file, base_patterns_file, n, outfile, 
 @click.argument('encoder')
 @click.argument('outfile')
 @click.option('--string', is_flag=True)
-def decode_pattern_collection(ctx, infile, encoder, outfile, string):
+@click.option('--unknown')
+def decode_pattern_collection(ctx, infile, encoder, outfile, string, unknown):
 
     with open_file(encoder, 'rb') as encoder_file:
         pattern_encoder = Base64Encoder(PatternEncoder.load(encoder_file), binary=False)
@@ -631,6 +632,26 @@ def decode_pattern_collection(ctx, infile, encoder, outfile, string):
                     out_pattern = str(decoded_pattern)
                 else:
                     out_pattern = base64.b64encode(pickle.dumps(decoded_pattern)).decode('ascii')
+
+                base_patterns = content.get('base_patterns', [])
+                decoded_base_patterns = []
+                for base_pattern in base_patterns:
+
+                    try:
+                        decoded_pattern = pattern_encoder.decode(base_pattern[0])
+
+                        if unknown is None or all([element != unknown for element in decoded_pattern.get_element_list()]):
+                            if string:
+                                cout_pattern = str(decoded_pattern)
+                            else:
+                                cout_pattern = base64.b64encode(pickle.dumps(decoded_pattern)).decode('ascii')
+
+                            decoded_base_patterns.append([cout_pattern, base_pattern[1]])
+                    except:
+                        ctx.obj['logger'].warning("Could not test pattern for unknown, skipping.")
+
+                content['base_patterns'] = decoded_base_patterns
+
 
                 json.dump((out_pattern, content), o)
                 o.write("\n")
