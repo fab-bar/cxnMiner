@@ -5,20 +5,23 @@ import pytest
 from cxnminer.pattern_encoder import PatternEncoder, Base64Encoder, BitEncoder, HuffmanEncoder, EncodeError
 from cxnminer.pattern import SNGram, PatternElement
 
+## number of elements:
+##  element in dictionary + special (3 for SNGram) + 2 (start and end of token)
+##  unknown adds one element per level
 
 def test_bit_size_7():
 
-    test = BitEncoder({'form': set(['a', 'b']), 'function': set(['a', 'b'])}, SNGram)
+    test = BitEncoder({'form': set(['a']), 'function': set(['a'])}, SNGram)
     assert test.element_size == 3
 
 def test_bit_size_7_unknown():
 
-    test = BitEncoder({'form': set(['a', 'b']), 'function': set(['a', 'b'])}, SNGram, '__unknown__')
+    test = BitEncoder({'form': set(['a']), 'function': set(['a'])}, SNGram, '__unknown__')
     assert test.element_size == 4
 
 def test_bit_size_8():
 
-    test = BitEncoder({'form': set(['a', 'b', 'c']), 'function': set(['a', 'b'])}, SNGram)
+    test = BitEncoder({'form': set(['a', 'b']), 'function': set(['a'])}, SNGram)
     assert test.element_size == 4
 
 @pytest.mark.parametrize("encoder_dict", [
@@ -133,30 +136,6 @@ def test_encode_unknown_not_set_huffman():
 
 
 
-def test_decode_unknown_not_set():
-
-    test_encoder = BitEncoder(
-        {'form': {'fox': 0, 'quick': 1, 'brown': 2}}, SNGram, "__unkonwn__")
-    test_decoder = BitEncoder(
-        {'form': {'fox': 0, 'quick': 1, 'brown': 2}}, SNGram)
-
-    pattern_list = [
-        PatternElement('fox', 'form'),
-        SNGram.LEFT_BRACKET,
-        PatternElement('The', 'form'),
-        SNGram.COMMA,
-        PatternElement('quick', 'form'),
-        SNGram.COMMA,
-        PatternElement('brown', 'form'),
-        SNGram.RIGHT_BRACKET
-    ]
-    pattern =  SNGram.from_element_list(pattern_list)
-    encoded_pattern = test_encoder.encode(pattern)
-
-    with pytest.raises(ValueError):
-        test_decoder.decode(encoded_pattern)
-
-
 @pytest.mark.parametrize("freq_dict", [
     {'form': {'fox': 5, 'The': 10, 'quick': 3, 'brown': 8}}
 ])
@@ -202,6 +181,22 @@ def test_encode_decode(encoder):
 
 
 @pytest.mark.parametrize("encoder", encoder)
+def test_encode_decode_with_full_token(encoder):
+
+    pattern =  SNGram.from_element_list([
+        {'form': 'fox'},
+        SNGram.LEFT_BRACKET,
+        PatternElement('The', 'form'),
+        SNGram.COMMA,
+        PatternElement('quick', 'form'),
+        SNGram.COMMA,
+        {'form': 'brown'},
+        SNGram.RIGHT_BRACKET
+    ])
+
+    assert encoder.decode(encoder.encode(pattern)) == pattern
+
+@pytest.mark.parametrize("encoder", encoder)
 def test_encode_item(encoder):
 
     element = PatternElement('fox', 'form')
@@ -209,6 +204,14 @@ def test_encode_item(encoder):
 
     assert encoder.decode(encoder.encode_item(element)) == expected_pattern
 
+
+@pytest.mark.parametrize("encoder", encoder)
+def test_encode_decode_item_with_full_token(encoder):
+
+    element = {'form': 'fox'}
+    expected_pattern = SNGram.from_element_list([element])
+
+    assert encoder.decode(encoder.encode_item(element)) == expected_pattern
 
 @pytest.mark.parametrize("encoder", encoder)
 def test_append(encoder):

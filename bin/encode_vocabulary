@@ -90,6 +90,9 @@ if __name__ == "__main__":
     for word in encoder.get_pattern_type().specialElements():
       encoded_vocabularies["__special__"][word] = encoder.encode_item(word)
 
+    encoded_vocabularies["__special__"][encoder.token_start] = encoder.encode_item(encoder.token_start)
+    encoded_vocabularies["__special__"][encoder.token_end] = encoder.encode_item(encoder.token_end)
+
   logger.info("Finished encoding.")
 
   with open_file(args.outfile, 'w') as outfile:

@@ -14,6 +14,9 @@ class EncodeError(ValueError):
 
 class PatternEncoder(metaclass=abc.ABCMeta):
 
+    token_start = "__TOKEN_START__"
+    token_end = "__TOKEN_END__"
+
     @abc.abstractmethod
     def encode_item(self, item):
         pass # pragma: no cover
@@ -193,8 +196,8 @@ class BitEncoder(PatternEncoder):
 
         self.special_offset = curr_offset
 
-        ## calculate the number of bits needed
-        dict_size = self.special_offset + len(self.special_characters)
+        ## calculate the number of bits needed (additional 2 are for token_start and token_end)
+        dict_size = self.special_offset + len(self.special_characters) + 2
         self.element_size = math.floor(math.log(dict_size-1, 2) + 1)
 
 
@@ -220,19 +223,39 @@ class BitEncoder(PatternEncoder):
 
         code = 0
 
-        try:
-            code = self.special_characters.index(item) + self.special_offset
+        if item == self.token_start:
 
-        except ValueError:
+            code = self.special_offset + len(self.special_characters)
+
+        elif item == self.token_end:
+
+            code = self.special_offset + len(self.special_characters) + 1
+
+        else:
 
             try:
-                code = self.dictionaries[item.level][item.form] + self.level_offsets[item.level]
-            except KeyError:
+                code = self.special_characters.index(item) + self.special_offset
 
-                if self.unknown is not None:
-                    code = len(self.dictionaries[item.level]) + self.level_offsets[item.level]
-                else:
-                    raise EncodeError("Element not in dictionary: " + str(item))
+            except ValueError:
+
+                try:
+                    code = self.dictionaries[item.level][item.form] + self.level_offsets[item.level]
+
+                except AttributeError:
+
+                    ## it is a token - so encode this
+                    return self._encode(
+                        [self.token_start] +
+                        [PatternElement(value, level) for level, value in item.items()] +
+                        [self.token_end]
+                    )
+
+                except KeyError:
+
+                    if self.unknown is not None:
+                        code = len(self.dictionaries[item.level]) + self.level_offsets[item.level]
+                    else:
+                        raise EncodeError("Element not in dictionary: " + str(item))
 
         return self._int_2_bytes(code)
 
@@ -240,19 +263,23 @@ class BitEncoder(PatternEncoder):
 
         encoded_pattern = self._bytes_2_int(encoded_pattern)
         encoded_item = self._bytes_2_int(encoded_item)
-        return self._int_2_bytes(encoded_pattern << self.element_size | encoded_item)
 
+        element_size = math.ceil(encoded_item.bit_length() / self.element_size) * self.element_size
+        return self._int_2_bytes(encoded_pattern << element_size | encoded_item)
 
-    def encode(self, pattern):
+    def _encode(self, pattern):
 
         code = b''
-
-        pattern = pattern.get_element_list()
 
         for element in pattern:
             code = self.append(code, self.encode_item(element))
 
         return code
+
+    def encode(self, pattern):
+
+        return(self._encode(pattern.get_element_list()))
+
 
     def decode(self, encoded_pattern):
 
@@ -261,16 +288,32 @@ class BitEncoder(PatternEncoder):
         pattern = []
         element_size_int = 2**self.element_size - 1
 
-        while encoded_pattern != 0:
-            try:
-                word, level = self._get_word_for_id(int(encoded_pattern & element_size_int))
-            except:
-                raise ValueError("Cannot decode pattern, unknown key " + str(int(encoded_pattern & element_size_int)))
+        in_token = False
 
-            if level is not None:
-                pattern.append(PatternElement(word, level))
-            else:
-                pattern.append(word)
+        while encoded_pattern != 0:
+            element_id = int(encoded_pattern & element_size_int)
+            try:
+                word, level = self._get_word_for_id(element_id)
+                if in_token:
+                    current_token[level] = word
+                else:
+                    if level is not None:
+                        pattern.append(PatternElement(word, level))
+                    else:
+                        pattern.append(word)
+
+            except:
+                ## end of token - treat as start as pattern is reversed
+                if element_id == len(self._ids_2_words) + 2:
+                    in_token = True
+                    current_token = {}
+                ## start of token - treat as start as pattern is reversed
+                elif element_id == len(self._ids_2_words) + 1:
+                    in_token = False
+                    pattern.append(current_token)
+
+                else:
+                    raise ValueError("Cannot decode pattern, unknown key " + str(element_id))
 
             encoded_pattern = encoded_pattern >> self.element_size
 
@@ -311,6 +354,9 @@ class HuffmanEncoder(CombinablePatternEncoder):
             for level in frequency_dictionaries.keys():
                 huffman_freq_dict[PatternElement(unknown, level)] = special_frequency
 
+        huffman_freq_dict[self.token_start] = max(max_freq, special_frequency)
+        huffman_freq_dict[self.token_end] = max(max_freq, special_frequency)
+
         self.huffman_dict = bitarray.util.huffman_code(huffman_freq_dict)
 
     @classmethod
@@ -323,25 +369,37 @@ class HuffmanEncoder(CombinablePatternEncoder):
 
         return cls._int_2_bytes(bitarray.util.ba2int(cls.prefix + bitarray_))
 
-    def _encode(self, pattern):
+    def _encode_to_bitarray(self, pattern):
 
         code = bitarray.bitarray()
 
         try:
             code.encode(self.huffman_dict, pattern)
         except ValueError as e:
-            if self.unknown is not None:
-
-                code = bitarray.bitarray()
-                for element in pattern:
+            code = bitarray.bitarray()
+            for element in pattern:
+                if not hasattr(element, 'items'):
                     try:
                         code.encode(self.huffman_dict, [element])
                     except ValueError:
-                        code.encode(self.huffman_dict, [PatternElement(self.unknown, element.level)])
-            else:
-                raise EncodeError(str(e))
+                        if self.unknown is not None:
+                            code.encode(self.huffman_dict, [PatternElement(self.unknown, element.level)])
+                        else:
+                            raise EncodeError(str(e))
+                else:
+                    ## encode a whole token (a dict)
+                    code.extend(
+                        self._encode_to_bitarray(
+                            [self.token_start] +
+                            [PatternElement(value, level) for level, value in element.items()] +
+                            [self.token_end]))
 
-        return self._bitarray_2_bytes(code)
+
+        return code
+
+    def _encode(self, pattern):
+
+        return self._bitarray_2_bytes(self._encode_to_bitarray(pattern))
 
     def encode_item(self, pattern_element):
 
@@ -355,7 +413,24 @@ class HuffmanEncoder(CombinablePatternEncoder):
     def decode(self, encoded_pattern):
 
         encoded = self._bytes_2_bitarray(encoded_pattern)
-        pattern = encoded.decode(self.huffman_dict)
+        flat_pattern = encoded.decode(self.huffman_dict)
+
+        pattern = []
+        in_token = False
+        for element in flat_pattern:
+
+            if in_token:
+                if element == self.token_end:
+                    pattern.append(current_token)
+                    in_token = False
+                else:
+                    current_token[element.level] = element.form
+            else:
+                if element == self.token_start:
+                    current_token = {}
+                    in_token = True
+                else:
+                    pattern.append(element)
 
         return self.pattern_type.from_element_list(pattern)
 
