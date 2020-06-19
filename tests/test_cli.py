@@ -178,7 +178,8 @@ expected_basepatterns_with_phrase = {
         {**expected_basepatterns_without_phrase, **expected_basepatterns_with_phrase}
     ),
     (["--skip_unknown"], expected_patterns_without_phrase_and_unknown, expected_basepatterns_without_phrase_without_unknown),
-    (["--keep_only_dict_words"], expected_patterns_without_phrase_and_unknown, expected_basepatterns_without_phrase_without_unknown)
+    (["--keep_only_dict_words"], expected_patterns_without_phrase, expected_basepatterns_without_phrase),
+    (["--keep_only_dict_words", "--skip_unknown"], expected_patterns_without_phrase_and_unknown, expected_basepatterns_without_phrase_without_unknown)
 ])
 def test_extract_patterns_with_phrases(parameters, expected_patterns, expected_basepatterns):
 
@@ -393,7 +394,6 @@ def test_encode_corpus():
 
     infile_path = os.path.abspath('example_data/example_data.conllu')
     encoded_dict_path = os.path.abspath('example_data/example_data_dict_filtered_encoded.json')
-    encoder_path = os.path.abspath('example_data/example_data_encoder')
     expected_outfile_path = os.path.abspath('example_data/example_data_encoded.conllu')
     script_file = os.path.abspath('bin/encode_corpus')
 
@@ -402,7 +402,7 @@ def test_encode_corpus():
 
         outfile = "example_data_encoded.conllu"
 
-        os.system(script_file + " " + infile_path + " " + outfile + " " + encoded_dict_path + " lemma upostag np_function --encoder_file " + encoder_path)
+        os.system(script_file + " " + infile_path + " " + outfile + " " + encoded_dict_path + " lemma upostag np_function --unknown \"__unknown__\"")
 
 
         assert filecmp.cmp(outfile, expected_outfile_path, shallow=False)

@@ -182,6 +182,8 @@ class BitEncoder(PatternEncoder):
 
             self.level_offsets[level] = curr_offset
             curr_offset += len(self.dictionaries[level])
+            if self.unknown is not None:
+                curr_offset += 1
 
             if not hasattr(self.dictionaries[level], "items"):
                 self.dictionaries[level] = {
@@ -193,8 +195,6 @@ class BitEncoder(PatternEncoder):
 
         ## calculate the number of bits needed
         dict_size = self.special_offset + len(self.special_characters)
-        if self.unknown is not None:
-            dict_size += 1
         self.element_size = math.floor(math.log(dict_size-1, 2) + 1)
 
 
@@ -208,12 +208,11 @@ class BitEncoder(PatternEncoder):
                 for word, id_ in self.dictionaries[level].items():
                     self._ids_2_words[id_ + self.level_offsets[level]] = (word , level)
 
+                if self.unknown is not None:
+                    self._ids_2_words[id_ + 1 + self.level_offsets[level]] = (self.unknown, level)
+
             for id_, word in enumerate(self.special_characters):
                 self._ids_2_words[id_ + self.special_offset] = (word, None)
-
-            if self.unknown is not None:
-                self._ids_2_words[self.special_offset + len(self.special_characters)] = (self.unknown, None)
-
 
         return self._ids_2_words[word_id]
 
@@ -231,7 +230,7 @@ class BitEncoder(PatternEncoder):
             except KeyError:
 
                 if self.unknown is not None:
-                    code = self.special_offset + len(self.special_characters)
+                    code = len(self.dictionaries[item.level]) + self.level_offsets[item.level]
                 else:
                     raise EncodeError("Element not in dictionary: " + str(item))
 
@@ -309,7 +308,8 @@ class HuffmanEncoder(CombinablePatternEncoder):
 
         self.unknown = unknown
         if self.unknown is not None:
-            huffman_freq_dict[unknown] = special_frequency
+            for level in frequency_dictionaries.keys():
+                huffman_freq_dict[PatternElement(unknown, level)] = special_frequency
 
         self.huffman_dict = bitarray.util.huffman_code(huffman_freq_dict)
 
@@ -337,7 +337,7 @@ class HuffmanEncoder(CombinablePatternEncoder):
                     try:
                         code.encode(self.huffman_dict, [element])
                     except ValueError:
-                        code.encode(self.huffman_dict, [self.unknown])
+                        code.encode(self.huffman_dict, [PatternElement(self.unknown, element.level)])
             else:
                 raise EncodeError(str(e))
 

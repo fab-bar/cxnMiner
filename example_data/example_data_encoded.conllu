@@ -1,54 +1,54 @@
 # text = The quick brown fox jumps over the lazy dog.
-1	The	Fg==	Nw==	DT	Definite=Def|PronType=Art	4	CA==	_	_
-2	quick	YA==	GQ==	JJ	Degree=Pos	4	CA==	_	_
-3	brown	YQ==	GQ==	JJ	Degree=Pos	4	CA==	_	_
-4	fox	Kg==	HQ==	NN	Number=Sing	5	JQ==	_	_
-5	jumps	Kw==	NQ==	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	CA==	_	_
-6	over	Jw==	NA==	IN	_	9	CA==	_	_
-7	the	Fg==	Nw==	DT	Definite=Def|PronType=Art	9	CA==	_	_
-8	lazy	Jg==	GQ==	JJ	Degree=Pos	9	CA==	_	_
-9	dog	KQ==	HQ==	NN	Number=Sing	5	Ng==	_	SpaceAfter=No
-10	.	MQ==	Fw==	.	_	5	CA==	_	_
+1	The	Pw==	EA==	DT	Definite=Def|PronType=Art	4	GA==	_	_
+2	quick	VA==	FA==	JJ	Degree=Pos	4	GA==	_	_
+3	brown	VQ==	FA==	JJ	Degree=Pos	4	GA==	_	_
+4	fox	JA==	GQ==	NN	Number=Sing	5	Xw==	_	_
+5	jumps	JQ==	LQ==	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	GA==	_	_
+6	over	Iw==	LA==	IN	_	9	GA==	_	_
+7	the	Pw==	EA==	DT	Definite=Def|PronType=Art	9	GA==	_	_
+8	lazy	Ig==	FA==	JJ	Degree=Pos	9	GA==	_	_
+9	dog	fQ==	GQ==	NN	Number=Sing	5	Lg==	_	SpaceAfter=No
+10	.	Kw==	Ew==	.	_	5	GA==	_	_
 
 
 # text = Foxes jump over the lazy dog.
-1	Foxes	Kg==	HQ==	NN	Number=Plur	2	JQ==	_	_
-2	jump	Kw==	NQ==	VBZ	Mood=Ind|Number=Plur|Person=3|Tense=Pres|VerbForm=Fin	0	CA==	_	_
-3	over	Jw==	NA==	IN	_	6	CA==	_	_
-4	the	Fg==	Nw==	DT	Definite=Def|PronType=Art	6	CA==	_	_
-5	lazy	Jg==	GQ==	JJ	Degree=Pos	6	CA==	_	_
-6	dog	KQ==	HQ==	NN	Number=Sing	2	Ng==	_	SpaceAfter=No
-7	.	MQ==	Fw==	.	_	2	CA==	_	_
+1	Foxes	JA==	GQ==	NN	Number=Plur	2	Xw==	_	_
+2	jump	JQ==	LQ==	VBZ	Mood=Ind|Number=Plur|Person=3|Tense=Pres|VerbForm=Fin	0	GA==	_	_
+3	over	Iw==	LA==	IN	_	6	GA==	_	_
+4	the	Pw==	EA==	DT	Definite=Def|PronType=Art	6	GA==	_	_
+5	lazy	Ig==	FA==	JJ	Degree=Pos	6	GA==	_	_
+6	dog	fQ==	GQ==	NN	Number=Sing	2	Lg==	_	SpaceAfter=No
+7	.	Kw==	Ew==	.	_	2	GA==	_	_
 
 
 # text = The quick brown fox with the long tail jumps over the lazy dog.
-1	The	Fg==	Nw==	DT	Definite=Def|PronType=Art	4	CA==	_	_
-2	quick	YA==	GQ==	JJ	Degree=Pos	4	CA==	_	_
-3	brown	YQ==	GQ==	JJ	Degree=Pos	4	CA==	_	_
-4	fox	Kg==	HQ==	NN	Number=Sing	9	JQ==	_	_
-5	with	CA==	NA==	IN	_	8	CA==	_	_
-6	the	Fg==	Nw==	DT	Definite=Def|PronType=Art	8	CA==	_	_
-7	long	CA==	GQ==	JJ	Degree=Pos	8	CA==	_	_
-8	tail	CA==	HQ==	NN	Number=Sing	4	Ng==	_	_
-9	jumps	Kw==	NQ==	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	CA==	_	_
-10	over	Jw==	NA==	IN	_	13	CA==	_	_
-11	the	Fg==	Nw==	DT	Definite=Def|PronType=Art	13	CA==	_	_
-12	lazy	Jg==	GQ==	JJ	Degree=Pos	13	CA==	_	_
-13	dog	KQ==	HQ==	NN	Number=Sing	9	Ng==	_	SpaceAfter=No
-14	.	MQ==	Fw==	.	_	9	CA==	_	_
+1	The	Pw==	EA==	DT	Definite=Def|PronType=Art	4	GA==	_	_
+2	quick	VA==	FA==	JJ	Degree=Pos	4	GA==	_	_
+3	brown	VQ==	FA==	JJ	Degree=Pos	4	GA==	_	_
+4	fox	JA==	GQ==	NN	Number=Sing	9	Xw==	_	_
+5	with	HQ==	LA==	IN	_	8	GA==	_	_
+6	the	Pw==	EA==	DT	Definite=Def|PronType=Art	8	GA==	_	_
+7	long	HQ==	FA==	JJ	Degree=Pos	8	GA==	_	_
+8	tail	HQ==	GQ==	NN	Number=Sing	4	Lg==	_	_
+9	jumps	JQ==	LQ==	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	GA==	_	_
+10	over	Iw==	LA==	IN	_	13	GA==	_	_
+11	the	Pw==	EA==	DT	Definite=Def|PronType=Art	13	GA==	_	_
+12	lazy	Ig==	FA==	JJ	Degree=Pos	13	GA==	_	_
+13	dog	fQ==	GQ==	NN	Number=Sing	9	Lg==	_	SpaceAfter=No
+14	.	Kw==	Ew==	.	_	9	GA==	_	_
 
 
 # text = We have apples, pears, oranges, and bananas.
-1	We	CA==	CA==	PRP	Number=Plur	2	JQ==	_	_
-2	have	CA==	NQ==	VBZ	Mood=Ind|Number=Plur|Person=1|Tense=Pres|VerbForm=Fin	0	CA==	_	_
-3	apples	CA==	HQ==	NN	Number=Plur	2	CA==	_	_
-4	,	KA==	Fw==	,	_	5	CA==	_	_
-5	pears	CA==	HQ==	NN	Number=Plur	3	JA==	_	_
-6	,	KA==	Fw==	,	_	7	CA==	_	_
-7	oranges	CA==	HQ==	NN	Number=Plur	3	JA==	_	_
-8	,	KA==	Fw==	,	_	10	CA==	_	_
-9	and	CA==	CA==	CC	_	10	CA==	_	_
-10	bananas	CA==	HQ==	NN	Number=Plur	3	JA==	_	_
-11	.	MQ==	Fw==	.	_	2	CA==	_	_
+1	We	HQ==	Gg==	PRP	Number=Plur	2	Xw==	_	_
+2	have	HQ==	LQ==	VBZ	Mood=Ind|Number=Plur|Person=1|Tense=Pres|VerbForm=Fin	0	GA==	_	_
+3	apples	HQ==	GQ==	NN	Number=Plur	2	GA==	_	_
+4	,	fA==	Ew==	,	_	5	GA==	_	_
+5	pears	HQ==	GQ==	NN	Number=Plur	3	Xg==	_	_
+6	,	fA==	Ew==	,	_	7	GA==	_	_
+7	oranges	HQ==	GQ==	NN	Number=Plur	3	Xg==	_	_
+8	,	fA==	Ew==	,	_	10	GA==	_	_
+9	and	HQ==	Gg==	CC	_	10	GA==	_	_
+10	bananas	HQ==	GQ==	NN	Number=Plur	3	Xg==	_	_
+11	.	Kw==	Ew==	.	_	2	GA==	_	_
 
 

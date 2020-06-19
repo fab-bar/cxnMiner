@@ -19,7 +19,7 @@ if __name__ == "__main__":
   parser.add_argument('encoder')
   parser.add_argument('--no_frequencies', action='store_true', default=False)
   parser.add_argument('--add_special', action='store_true', default=False)
-  parser.add_argument('--add_unknown', action='store_true', default=False)
+  parser.add_argument('--unknown', type=str, default=None)
   parser.add_argument('--logging_config', default=None)
   args = parser.parse_args()
 
@@ -79,18 +79,16 @@ if __name__ == "__main__":
       logger.info("Encoding word " + word + ".")
       encoded_vocabularies[level][word] = encoder.encode_item(PatternElement(word, level))
 
+    if args.unknown is not None:
+      logger.info("Encoding unknown element.")
+      encoded_vocabularies[level][args.unknown] = encoder.encode_item(PatternElement(args.unknown, level))
+
 
   if args.add_special:
 
     logger.info("Encoding special elements.")
     for word in encoder.get_pattern_type().specialElements():
       encoded_vocabularies["__special__"][word] = encoder.encode_item(word)
-
-  if args.add_unknown:
-
-    logger.info("Encoding unknown element.")
-    for word in encoder.get_pattern_type().specialElements():
-      encoded_vocabularies["__unknown__"] = encoder.encode_item(None)
 
   logger.info("Finished encoding.")
 

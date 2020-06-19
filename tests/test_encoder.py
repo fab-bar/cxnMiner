@@ -61,7 +61,7 @@ def test_encode_decode_unknown_bitencoder():
     pattern =  SNGram.from_element_list(pattern_list)
 
     expected_pattern_list = pattern_list
-    expected_pattern_list[2] = unknown_token
+    expected_pattern_list[2] = PatternElement(unknown_token, 'form')
     expected_pattern = SNGram.from_element_list(expected_pattern_list)
 
     assert test.decode(test.encode(pattern)) == expected_pattern
@@ -86,7 +86,7 @@ def test_encode_decode_unknown_huffman():
     pattern =  SNGram.from_element_list(pattern_list)
 
     expected_pattern_list = pattern_list
-    expected_pattern_list[2] = unknown_token
+    expected_pattern_list[2] = PatternElement(unknown_token, 'form')
     expected_pattern = SNGram.from_element_list(expected_pattern_list)
 
     assert test.decode(test.encode(pattern)) == expected_pattern

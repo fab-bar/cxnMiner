@@ -75,7 +75,8 @@ def encode_pattern(pattern):
 
     return Base64Encoder.b64encode(current_pattern, binary=False)
 
-def pattern_extraction(sentence_tuple, extractor, word_level, logger, unknown=None, known=None):
+def pattern_extraction(sentence_tuple, extractor, word_level, logger,
+                       skip_unknown, unknowns={}, known=None):
 
     sentence_nr, sentence = sentence_tuple
 
@@ -86,6 +87,11 @@ def pattern_extraction(sentence_tuple, extractor, word_level, logger, unknown=No
 
     sentence_base_patterns = collections.defaultdict(list)
     tpatterns = extractor.extract_patterns(sentence)
+
+    if skip_unknown:
+        unknown = unknowns.values()
+    else:
+        unknown = []
 
     for tpattern in tpatterns:
 
@@ -99,7 +105,7 @@ def pattern_extraction(sentence_tuple, extractor, word_level, logger, unknown=No
 
             if pattern != base_pattern:
                 ### only keep patterns that consist of given vocabulary entries
-                if unknown is None or not any((unknown == getattr(element, "form", None) for element in pattern.get_element_list())):
+                if not unknown or not any((getattr(element, "form", None) in unknown for element in pattern.get_element_list())):
                     if known is None or all(
                             (getattr(element, "form", element) in known.get(
                                 getattr(element, "level", "__special__"), {})
@@ -144,10 +150,10 @@ def extract_patterns(ctx, infile, outfile_patterns, outfile_base,
 
     meta_symbols = encoded_dict.get("__special__", {})
 
-    if skip_unknown:
-        unknown = encoded_dict.get('__unknown__', '__unknown__')
-    else:
-        unknown = None
+    unknown = {}
+    for level in encoded_dict.keys():
+        if level != "__special__":
+            unknown[level] = encoded_dict[level].get('__unknown__', '__unknown__')
 
     if keep_only_dict_words:
         known = {level: set(vocab.values()) for level, vocab in encoded_dict.items() if isinstance(vocab, collections.abc.Mapping)}
@@ -176,7 +182,8 @@ def extract_patterns(ctx, infile, outfile_patterns, outfile_base,
                 for sentence_patterns in map(
                         functools.partial(
                             pattern_extraction, extractor=extractor, word_level=word_level, logger=ctx.obj['logger'],
-                            unknown=unknown, known=known),
+                            skip_unknown=skip_unknown,
+                            unknowns=unknown, known=known),
                         enumerate(conllu.parse_incr(infile))):
 
                     for is_base_pattern, pattern, content in sentence_patterns:

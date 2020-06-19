@@ -19,16 +19,13 @@ level_dict = {
 
 def encode_item(level, level_name, token, vocabulary, unknown=None, logger=None):
 
-    encoded = vocabulary.get(level).get(token[level_name], None)
+    encoded = vocabulary.get(level).get(token[level_name], vocabulary.get(level).get(unknown, None))
 
     if encoded is None:
 
-        if unknown is not None:
-            encoded = unknown
-        else:
-            if logger is not None:
-                logger.warning(str(PatternElement(token[level_name], level)) + " was not encoded.")
-            encoded = token[level_name]
+        if logger is not None:
+            logger.warning(str(PatternElement(token[level_name], level)) + " was not encoded.")
+        encoded = token[level_name]
 
     return encoded
 
@@ -40,7 +37,7 @@ if __name__ == "__main__":
     parser.add_argument('outfile')
     parser.add_argument('dictionary')
     parser.add_argument('levels', type=str, nargs='+')
-    parser.add_argument('--encoder_file')
+    parser.add_argument('--unknown', type=str, default=None)
     parser.add_argument('--processes', type=int, default=4)
     parser.add_argument('--logging_config', default=None)
     args = parser.parse_args()
@@ -78,14 +75,6 @@ if __name__ == "__main__":
     with open_file(args.dictionary) as dict_file:
         vocabulary = json.load(dict_file)
 
-    unknown = None
-    if args.encoder_file is not None:
-        with open_file(args.encoder_file, 'rb') as encoder_file:
-            encoder = Base64Encoder(PatternEncoder.load(encoder_file), binary=False)
-            unknown = encoder.encode_item(None)
-            del encoder
-
-
     def encode_sentence(sentence):
 
         for token in sentence:
@@ -96,7 +85,7 @@ if __name__ == "__main__":
                 level_name = level_dict.get(level, level)
 
                 ## write encoded data into token
-                token[level_name] = encode_item(level, level_name, token, vocabulary, unknown, logger)
+                token[level_name] = encode_item(level, level_name, token, vocabulary, args.unknown, logger)
 
         logger.info("Encoded sentence " + sentence.metadata.get('sent_id', sentence.metadata.get('text', '')))
         return sentence
