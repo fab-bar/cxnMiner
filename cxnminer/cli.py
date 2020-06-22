@@ -91,7 +91,7 @@ def encode_pattern(pattern, token_start, token_end, unknowns):
 
     return Base64Encoder.b64encode(current_pattern, binary=False)
 
-def pattern_extraction(sentence_tuple, extractor, word_level, token_start, token_end,
+def pattern_extraction(sentence_tuple, extractor, word_level, token_start, token_end, keep_only_word,
                        logger, skip_unknown, unknowns={}, known=None):
 
     sentence_nr, sentence = sentence_tuple
@@ -117,18 +117,21 @@ def pattern_extraction(sentence_tuple, extractor, word_level, token_start, token
 
         base_pattern_encoded = None
 
-        for pattern in tpattern.get_pattern_list(frozenset(['lemma', 'upostag', 'np_function'])):
 
-            if pattern != base_level_pattern:
-                ### only keep patterns that consist of given vocabulary entries
-                if not unknown or not any((getattr(element, "form", None) in unknown for element in pattern.get_element_list())):
-                    if known is None or all(
-                            (getattr(element, "form", element) in known.get(
-                                getattr(element, "level", "__special__"), {})
-                             for element in pattern.get_element_list())):
-                        if base_pattern_encoded is None:
-                            base_pattern_encoded = encode_pattern(tpattern.get_full_pattern(), token_start, token_end, unknowns)
-                        this_pattern_list.append((False, encode_pattern(pattern, token_start, token_end, unknowns), base_pattern_encoded))
+        if keep_only_word is None or any([getattr(element, "get", lambda x, y: None)(word_level, None) == keep_only_word for element in tpattern.get_full_pattern().get_element_list()]):
+            for pattern in tpattern.get_pattern_list(frozenset(['lemma', 'upostag', 'np_function'])):
+
+                if pattern != base_level_pattern:
+                    ### only keep patterns that consist of given vocabulary entries
+                    if not unknown or not any((getattr(element, "form", None) in unknown for element in pattern.get_element_list())):
+                        if known is None or all(
+                                (getattr(element, "form", element) in known.get(
+                                    getattr(element, "level", "__special__"), {})
+                                 for element in pattern.get_element_list())):
+                            if base_pattern_encoded is None:
+                                base_pattern_encoded = encode_pattern(tpattern.get_full_pattern(), token_start, token_end, unknowns)
+                            this_pattern_list.append((False, encode_pattern(pattern, token_start, token_end, unknowns), base_pattern_encoded))
+
 
         if this_pattern_list:
             base_pattern_positions = ",".join(
@@ -150,12 +153,13 @@ def pattern_extraction(sentence_tuple, extractor, word_level, token_start, token
 @click.argument('encoded_dictionaries', type=str)
 @click.argument('word_level', type=str)
 @click.argument('phrase_tags', type=str, nargs=-1)
+@click.option('--keep_only_word', type=str)
 @click.option('--max_pattern_size', type=int, default=4)
 @click.option('--keep_only_dict_words', is_flag=True)
 @click.option('--skip_unknown', is_flag=True)
 @click.option('--only_base', is_flag=True)
 def extract_patterns(ctx, infile, outfile_patterns, outfile_base, encoded_dictionaries,
-                     word_level, phrase_tags, max_pattern_size,
+                     word_level, phrase_tags, keep_only_word, max_pattern_size,
                      keep_only_dict_words, skip_unknown, only_base):
 
     try:
@@ -184,6 +188,9 @@ def extract_patterns(ctx, infile, outfile_patterns, outfile_base, encoded_dictio
     else:
         special_node_conversion = None
 
+    if keep_only_word is not None:
+        keep_only_word = encoded_dict["lemma"][keep_only_word]
+
     del encoded_dict
 
     extractor = SyntacticNGramExtractor(
@@ -200,7 +207,7 @@ def extract_patterns(ctx, infile, outfile_patterns, outfile_base, encoded_dictio
                 for sentence_patterns in map(
                         functools.partial(
                             pattern_extraction, extractor=extractor, word_level=word_level,
-                            token_start=token_start, token_end=token_end,
+                            token_start=token_start, token_end=token_end, keep_only_word=keep_only_word,
                             logger=ctx.obj['logger'],
                             skip_unknown=skip_unknown,
                             unknowns=unknown, known=known),
