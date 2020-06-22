@@ -1,4 +1,5 @@
 import base64
+import binascii
 import collections
 import collections.abc
 import functools
@@ -66,17 +67,32 @@ def conversion_function(tree, tags):
         return None
 
 
-def encode_pattern(pattern):
+def encode_pattern(pattern, token_start, token_end, unknowns):
 
     current_pattern = b''
     for element in pattern.get_element_list():
-        encoded_element = Base64Encoder.b64decode(str(element))
-        current_pattern = HuffmanEncoder.combine(current_pattern, encoded_element)
+        if not hasattr(element, 'items'):
+            ## can be special element (string), or a PatternElement
+            current_list = [(str(element), getattr(element, 'get', lambda x, y: None)('level', None))]
+        else:
+            current_list = [(token_start, None)] + [(word, level) for level, word in element.items() if level in {'lemma', 'upostag', 'deprel'}] + [(token_end, None)]
+
+        for element, level in current_list:
+            ## just a quick fix - np_function needs to be handled differently
+            if level == 'deprel':
+                level = 'np_function'
+            try:
+                encoded_element = Base64Encoder.b64decode(element)
+            except binascii.Error:
+                ## set encoded_element to unknown
+                encoded_element = Base64Encoder.b64decode(unknowns[level])
+
+            current_pattern = HuffmanEncoder.combine(current_pattern, encoded_element)
 
     return Base64Encoder.b64encode(current_pattern, binary=False)
 
-def pattern_extraction(sentence_tuple, extractor, word_level, logger,
-                       skip_unknown, unknowns={}, known=None):
+def pattern_extraction(sentence_tuple, extractor, word_level, token_start, token_end,
+                       logger, skip_unknown, unknowns={}, known=None):
 
     sentence_nr, sentence = sentence_tuple
 
@@ -97,13 +113,13 @@ def pattern_extraction(sentence_tuple, extractor, word_level, logger,
 
         this_pattern_list = []
 
-        base_pattern = tpattern.get_base_pattern(word_level)
+        base_level_pattern = tpattern.get_base_pattern(word_level)
 
         base_pattern_encoded = None
 
         for pattern in tpattern.get_pattern_list(frozenset(['lemma', 'upostag', 'np_function'])):
 
-            if pattern != base_pattern:
+            if pattern != base_level_pattern:
                 ### only keep patterns that consist of given vocabulary entries
                 if not unknown or not any((getattr(element, "form", None) in unknown for element in pattern.get_element_list())):
                     if known is None or all(
@@ -111,8 +127,8 @@ def pattern_extraction(sentence_tuple, extractor, word_level, logger,
                                 getattr(element, "level", "__special__"), {})
                              for element in pattern.get_element_list())):
                         if base_pattern_encoded is None:
-                            base_pattern_encoded = encode_pattern(base_pattern)
-                        this_pattern_list.append((False, encode_pattern(pattern), base_pattern_encoded))
+                            base_pattern_encoded = encode_pattern(tpattern.get_full_pattern(), token_start, token_end, unknowns)
+                        this_pattern_list.append((False, encode_pattern(pattern, token_start, token_end, unknowns), base_pattern_encoded))
 
         if this_pattern_list:
             base_pattern_positions = ",".join(
@@ -131,15 +147,15 @@ def pattern_extraction(sentence_tuple, extractor, word_level, logger,
 @click.argument('infile')
 @click.argument('outfile_patterns')
 @click.argument('outfile_base')
+@click.argument('encoded_dictionaries', type=str)
 @click.argument('word_level', type=str)
 @click.argument('phrase_tags', type=str, nargs=-1)
-@click.option('--encoded_dictionaries', type=str, default="{}")
 @click.option('--max_pattern_size', type=int, default=4)
 @click.option('--keep_only_dict_words', is_flag=True)
 @click.option('--skip_unknown', is_flag=True)
 @click.option('--only_base', is_flag=True)
-def extract_patterns(ctx, infile, outfile_patterns, outfile_base,
-                     word_level, phrase_tags, encoded_dictionaries, max_pattern_size,
+def extract_patterns(ctx, infile, outfile_patterns, outfile_base, encoded_dictionaries,
+                     word_level, phrase_tags, max_pattern_size,
                      keep_only_dict_words, skip_unknown, only_base):
 
     try:
@@ -149,6 +165,8 @@ def extract_patterns(ctx, infile, outfile_patterns, outfile_base,
             encoded_dict = json.load(dict_file)
 
     meta_symbols = encoded_dict.get("__special__", {})
+    token_start = meta_symbols.get("__TOKEN_START__", "__TOKEN_START__")
+    token_end = meta_symbols.get("__TOKEN_END__", "__TOKEN_END__")
 
     unknown = {}
     for level in encoded_dict.keys():
@@ -181,7 +199,9 @@ def extract_patterns(ctx, infile, outfile_patterns, outfile_base,
 
                 for sentence_patterns in map(
                         functools.partial(
-                            pattern_extraction, extractor=extractor, word_level=word_level, logger=ctx.obj['logger'],
+                            pattern_extraction, extractor=extractor, word_level=word_level,
+                            token_start=token_start, token_end=token_end,
+                            logger=ctx.obj['logger'],
                             skip_unknown=skip_unknown,
                             unknowns=unknown, known=known),
                         enumerate(conllu.parse_incr(infile))):

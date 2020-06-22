@@ -10,84 +10,203 @@ from cxnminer.pattern import PatternElement
 from cxnminer.pattern_encoder import PatternEncoder, Base64Encoder
 from cxnminer.cli import main
 
+basepatterns_with_tokens = {
+    "dog [over, the, lazy]":
+        "{'lemma': 'dog', 'upostag': 'NOUN', 'np_function': 'nmod'} "
+    +       "["
+    +       "{'lemma': 'over', 'upostag': 'ADP', 'np_function': '__unknown__'}, "
+    +       "{'lemma': 'the', 'upostag': 'DET', 'np_function': '__unknown__'}, "
+    +       "{'lemma': 'lazy', 'upostag': 'ADJ', 'np_function': '__unknown__'}"
+    +       "]",
+    "fox [the, quick, brown]":
+        "{'lemma': 'fox', 'upostag': 'NOUN', 'np_function': 'nsubj'} "
+    +       "["
+    +       "{'lemma': 'the', 'upostag': 'DET', 'np_function': '__unknown__'}, "
+    +       "{'lemma': 'quick', 'upostag': 'ADJ', 'np_function': '__unknown__'}, "
+    +       "{'lemma': 'brown', 'upostag': 'ADJ', 'np_function': '__unknown__'}"
+    +       "]",
+    "__unknown__ [__unknown__, the, __unknown__]":
+        "{'lemma': '__unknown__', 'upostag': 'NOUN', 'np_function': 'nmod'} "
+    +       "["
+    +       "{'lemma': '__unknown__', 'upostag': 'ADP', 'np_function': '__unknown__'}, "
+    +       "{'lemma': 'the', 'upostag': 'DET', 'np_function': '__unknown__'}, "
+    +       "{'lemma': '__unknown__', 'upostag': 'ADJ', 'np_function': '__unknown__'}"
+    +       "]",
+    "__unknown__,":
+        "{'lemma': '__unknown__', 'upostag': 'NOUN', 'np_function': 'conj'} "
+    +       "{'lemma': ',', 'upostag': 'PUNCT', 'np_function': '__unknown__'}",
+    "__unknown__ [,, __unknown__]":
+        "{'lemma': '__unknown__', 'upostag': 'NOUN', 'np_function': 'conj'} "
+    +       "["
+    +       "{'lemma': ',', 'upostag': 'PUNCT', 'np_function': '__unknown__'}, "
+    +       "{'lemma': '__unknown__', 'upostag': '__unknown__', 'np_function': '__unknown__'}"
+    +       "]",
+    "jump [fox [the, quick, brown], dog [over, the, lazy], .]":
+        "{'lemma': 'jump', 'upostag': 'VERB', 'np_function': '__unknown__'} "
+    +       "["
+    +       "{'lemma': 'fox', 'upostag': 'NOUN', 'np_function': 'nsubj'} "
+    +           "["
+    +           "{'lemma': 'the', 'upostag': 'DET', 'np_function': '__unknown__'}, "
+    +           "{'lemma': 'quick', 'upostag': 'ADJ', 'np_function': '__unknown__'}, "
+    +           "{'lemma': 'brown', 'upostag': 'ADJ', 'np_function': '__unknown__'}"
+    +           "], "
+    +       "{'lemma': 'dog', 'upostag': 'NOUN', 'np_function': 'nmod'} "
+    +           "["
+    +           "{'lemma': 'over', 'upostag': 'ADP', 'np_function': '__unknown__'}, "
+    +           "{'lemma': 'the', 'upostag': 'DET', 'np_function': '__unknown__'}, "
+    +           "{'lemma': 'lazy', 'upostag': 'ADJ', 'np_function': '__unknown__'}"
+    +           "], "
+    +       "{'lemma': '.', 'upostag': 'PUNCT', 'np_function': '__unknown__'}"
+    +       "]",
+    "jump [fox, dog [over, the, lazy], .]":
+        "{'lemma': 'jump', 'upostag': 'VERB', 'np_function': '__unknown__'} "
+    +       "["
+    +       "{'lemma': 'fox', 'upostag': 'NOUN', 'np_function': 'nsubj'}, "
+    +       "{'lemma': 'dog', 'upostag': 'NOUN', 'np_function': 'nmod'} "
+    +           "["
+    +           "{'lemma': 'over', 'upostag': 'ADP', 'np_function': '__unknown__'}, "
+    +           "{'lemma': 'the', 'upostag': 'DET', 'np_function': '__unknown__'}, "
+    +           "{'lemma': 'lazy', 'upostag': 'ADJ', 'np_function': '__unknown__'}"
+    +           "], "
+    +       "{'lemma': '.', 'upostag': 'PUNCT', 'np_function': '__unknown__'}"
+    +       "]",
+    "jump [fox [the, quick, brown, __unknown__ [__unknown__, the, __unknown__]], dog [over, the, lazy], .]":
+        "{'lemma': 'jump', 'upostag': 'VERB', 'np_function': '__unknown__'} "
+    +       "["
+    +       "{'lemma': 'fox', 'upostag': 'NOUN', 'np_function': 'nsubj'} "
+    +           "["
+    +           "{'lemma': 'the', 'upostag': 'DET', 'np_function': '__unknown__'}, "
+    +           "{'lemma': 'quick', 'upostag': 'ADJ', 'np_function': '__unknown__'}, "
+    +           "{'lemma': 'brown', 'upostag': 'ADJ', 'np_function': '__unknown__'}, "
+    +           "{'lemma': '__unknown__', 'upostag': 'NOUN', 'np_function': 'nmod'} "
+    +               "["
+    +               "{'lemma': '__unknown__', 'upostag': 'ADP', 'np_function': '__unknown__'}, "
+    +               "{'lemma': 'the', 'upostag': 'DET', 'np_function': '__unknown__'}, "
+    +               "{'lemma': '__unknown__', 'upostag': 'ADJ', 'np_function': '__unknown__'}"
+    +               "]"
+    +           "], "
+    +       "{'lemma': 'dog', 'upostag': 'NOUN', 'np_function': 'nmod'} "
+    +           "["
+    +               "{'lemma': 'over', 'upostag': 'ADP', 'np_function': '__unknown__'}, "
+    +               "{'lemma': 'the', 'upostag': 'DET', 'np_function': '__unknown__'}, "
+    +               "{'lemma': 'lazy', 'upostag': 'ADJ', 'np_function': '__unknown__'}], "
+    +               "{'lemma': '.', 'upostag': 'PUNCT', 'np_function': '__unknown__'}"
+    +           "]",
+    "__unknown__ [__unknown__,, __unknown__,, __unknown__ [,, __unknown__]]":
+        "{'lemma': '__unknown__', 'upostag': 'NOUN', 'np_function': '__unknown__'} "
+    +       "["
+    +       "{'lemma': '__unknown__', 'upostag': 'NOUN', 'np_function': 'conj'} "
+    +           "{'lemma': ',', 'upostag': 'PUNCT', 'np_function': '__unknown__'}, "
+    +       "{'lemma': '__unknown__', 'upostag': 'NOUN', 'np_function': 'conj'} "
+    +           "{'lemma': ',', 'upostag': 'PUNCT', 'np_function': '__unknown__'}, "
+    +       "{'lemma': '__unknown__', 'upostag': 'NOUN', 'np_function': 'conj'} "
+    +           "["
+    +           "{'lemma': ',', 'upostag': 'PUNCT', 'np_function': '__unknown__'}, "
+    +           "{'lemma': '__unknown__', 'upostag': '__unknown__', 'np_function': '__unknown__'}"
+    +           "]"
+    +       "]",
+    "__unknown__ [__unknown__, __unknown__ [__unknown__,, __unknown__,, __unknown__ [,, __unknown__]], .]":
+        "{'lemma': '__unknown__', 'upostag': 'VERB', 'np_function': '__unknown__'} "
+    +       "["
+    +       "{'lemma': '__unknown__', 'upostag': '__unknown__', 'np_function': 'nsubj'}, "
+    +       "{'lemma': '__unknown__', 'upostag': 'NOUN', 'np_function': '__unknown__'} "
+    +           "["
+    +           "{'lemma': '__unknown__', 'upostag': 'NOUN', 'np_function': 'conj'} "
+    +               "{'lemma': ',', 'upostag': 'PUNCT', 'np_function': '__unknown__'}, "
+    +           "{'lemma': '__unknown__', 'upostag': 'NOUN', 'np_function': 'conj'} "
+    +               "{'lemma': ',', 'upostag': 'PUNCT', 'np_function': '__unknown__'}, "
+    +           "{'lemma': '__unknown__', 'upostag': 'NOUN', 'np_function': 'conj'} "
+    +               "["
+    +               "{'lemma': ',', 'upostag': 'PUNCT', 'np_function': '__unknown__'}, "
+    +               "{'lemma': '__unknown__', 'upostag': '__unknown__', 'np_function': '__unknown__'}"
+    +               "]"
+    +           "], "
+    +       "{'lemma': '.', 'upostag': 'PUNCT', 'np_function': '__unknown__'}"
+    +       "]",
+}
+
 expected_patterns_without_phrase_and_unknown = {
     # "fox [The, quick, brown]"
-    "NOUN [the, quick, brown]": {"fox [the, quick, brown]"},
-    "fox [DET, quick, brown]": {"fox [the, quick, brown]"},
-    "fox [the, ADJ, brown]": {"fox [the, quick, brown]"},
-    "fox [the, quick, ADJ]": {"fox [the, quick, brown]"},
+    "NOUN [the, quick, brown]": {basepatterns_with_tokens["fox [the, quick, brown]"]},
+    "fox [DET, quick, brown]": {basepatterns_with_tokens["fox [the, quick, brown]"]},
+    "fox [the, ADJ, brown]": {basepatterns_with_tokens["fox [the, quick, brown]"]},
+    "fox [the, quick, ADJ]": {basepatterns_with_tokens["fox [the, quick, brown]"]},
 
-    "NOUN [DET, quick, brown]": {"fox [the, quick, brown]"},
-    "NOUN [the, ADJ, brown]": {"fox [the, quick, brown]"},
-    "NOUN [the, quick, ADJ]": {"fox [the, quick, brown]"},
-    "fox [DET, ADJ, brown]": {"fox [the, quick, brown]"},
-    "fox [DET, quick, ADJ]": {"fox [the, quick, brown]"},
-    "fox [the, ADJ, ADJ]": {"fox [the, quick, brown]"},
+    "NOUN [DET, quick, brown]": {basepatterns_with_tokens["fox [the, quick, brown]"]},
+    "NOUN [the, ADJ, brown]": {basepatterns_with_tokens["fox [the, quick, brown]"]},
+    "NOUN [the, quick, ADJ]": {basepatterns_with_tokens["fox [the, quick, brown]"]},
+    "fox [DET, ADJ, brown]": {basepatterns_with_tokens["fox [the, quick, brown]"]},
+    "fox [DET, quick, ADJ]": {basepatterns_with_tokens["fox [the, quick, brown]"]},
+    "fox [the, ADJ, ADJ]": {basepatterns_with_tokens["fox [the, quick, brown]"]},
 
-    "NOUN [DET, ADJ, brown]": {"fox [the, quick, brown]"},
-    "NOUN [DET, quick, ADJ]": {"fox [the, quick, brown]"},
-    "NOUN [the, ADJ, ADJ]": {"fox [the, quick, brown]"},
-    "fox [DET, ADJ, ADJ]": {"fox [the, quick, brown]"},
+    "NOUN [DET, ADJ, brown]": {basepatterns_with_tokens["fox [the, quick, brown]"]},
+    "NOUN [DET, quick, ADJ]": {basepatterns_with_tokens["fox [the, quick, brown]"]},
+    "NOUN [the, ADJ, ADJ]": {basepatterns_with_tokens["fox [the, quick, brown]"]},
+    "fox [DET, ADJ, ADJ]": {basepatterns_with_tokens["fox [the, quick, brown]"]},
 
-    "NOUN [DET, ADJ, ADJ]": {"fox [the, quick, brown]"},
+    "NOUN [DET, ADJ, ADJ]": {basepatterns_with_tokens["fox [the, quick, brown]"]},
 
     # "dog [over, the, lazy]"
-    "NOUN [over, the, lazy]": {"dog [over, the, lazy]"},
-    "dog [ADP, the, lazy]": {"dog [over, the, lazy]"},
-    "dog [over, DET, lazy]": {"dog [over, the, lazy]"},
-    "dog [over, the, ADJ]": {"dog [over, the, lazy]"},
+    "NOUN [over, the, lazy]": {basepatterns_with_tokens["dog [over, the, lazy]"]},
+    "dog [ADP, the, lazy]": {basepatterns_with_tokens["dog [over, the, lazy]"]},
+    "dog [over, DET, lazy]": {basepatterns_with_tokens["dog [over, the, lazy]"]},
+    "dog [over, the, ADJ]": {basepatterns_with_tokens["dog [over, the, lazy]"]},
 
-    "NOUN [ADP, the, lazy]": {"dog [over, the, lazy]"},
-    "NOUN [over, DET, lazy]": {"dog [over, the, lazy]"},
-    "NOUN [over, the, ADJ]": {"dog [over, the, lazy]"},
-    "dog [ADP, DET, lazy]": {"dog [over, the, lazy]"},
-    "dog [ADP, the, ADJ]": {"dog [over, the, lazy]"},
-    "dog [over, DET, ADJ]": {"dog [over, the, lazy]"},
+    "NOUN [ADP, the, lazy]": {basepatterns_with_tokens["dog [over, the, lazy]"]},
+    "NOUN [over, DET, lazy]": {basepatterns_with_tokens["dog [over, the, lazy]"]},
+    "NOUN [over, the, ADJ]": {basepatterns_with_tokens["dog [over, the, lazy]"]},
+    "dog [ADP, DET, lazy]": {basepatterns_with_tokens["dog [over, the, lazy]"]},
+    "dog [ADP, the, ADJ]": {basepatterns_with_tokens["dog [over, the, lazy]"]},
+    "dog [over, DET, ADJ]": {basepatterns_with_tokens["dog [over, the, lazy]"]},
 
-    "NOUN [ADP, DET, lazy]": {"dog [over, the, lazy]"},
-    "NOUN [over, DET, ADJ]": {"dog [over, the, lazy]"},
-    "dog [ADP, DET, ADJ]": {"dog [over, the, lazy]"},
+    "NOUN [ADP, DET, lazy]": {basepatterns_with_tokens["dog [over, the, lazy]"]},
+    "NOUN [over, DET, ADJ]": {basepatterns_with_tokens["dog [over, the, lazy]"]},
+    "dog [ADP, DET, ADJ]": {basepatterns_with_tokens["dog [over, the, lazy]"]},
 
     # "dog [over, the, lazy]"
     # "tail [with, the, long]",
-    "NOUN [ADP, the, ADJ]": {"dog [over, the, lazy]", "__unknown__ [__unknown__, the, __unknown__]"},
-    "NOUN [ADP, DET, ADJ]": {"dog [over, the, lazy]", "__unknown__ [__unknown__, the, __unknown__]"},
+    "NOUN [ADP, the, ADJ]": {
+        basepatterns_with_tokens["dog [over, the, lazy]"],
+        basepatterns_with_tokens["__unknown__ [__unknown__, the, __unknown__]"]},
+    "NOUN [ADP, DET, ADJ]": {
+        basepatterns_with_tokens["dog [over, the, lazy]"],
+        basepatterns_with_tokens["__unknown__ [__unknown__, the, __unknown__]"]},
 
     # "oranges,"
     # "pears,"
-    "NOUN,": {"__unknown__,"},
-    "NOUN PUNCT": {"__unknown__,"},
+    "NOUN,": {basepatterns_with_tokens["__unknown__,"]},
+    "NOUN PUNCT": {basepatterns_with_tokens["__unknown__,"]},
 }
 
 expected_patterns_without_phrase = {
     **expected_patterns_without_phrase_and_unknown,
     **{
         # "tail [with, the, long]"
-        "NOUN [__unknown__, the, __unknown__]": {"__unknown__ [__unknown__, the, __unknown__]"},
-        "__unknown__ [ADP, the, __unknown__]": {"__unknown__ [__unknown__, the, __unknown__]"},
-        "__unknown__ [__unknown__, DET, __unknown__]": {"__unknown__ [__unknown__, the, __unknown__]"},
-        "__unknown__ [__unknown__, the, ADJ]": {"__unknown__ [__unknown__, the, __unknown__]"},
+        "NOUN [__unknown__, the, __unknown__]": {basepatterns_with_tokens["__unknown__ [__unknown__, the, __unknown__]"]},
+        "__unknown__ [ADP, the, __unknown__]": {basepatterns_with_tokens["__unknown__ [__unknown__, the, __unknown__]"]},
+        "__unknown__ [__unknown__, DET, __unknown__]": {basepatterns_with_tokens["__unknown__ [__unknown__, the, __unknown__]"]},
+        "__unknown__ [__unknown__, the, ADJ]": {basepatterns_with_tokens["__unknown__ [__unknown__, the, __unknown__]"]},
 
-        "NOUN [ADP, the, __unknown__]": {"__unknown__ [__unknown__, the, __unknown__]"},
-        "NOUN [__unknown__, DET, __unknown__]": {"__unknown__ [__unknown__, the, __unknown__]"},
-        "NOUN [__unknown__, the, ADJ]": {"__unknown__ [__unknown__, the, __unknown__]"},
-        "__unknown__ [ADP, DET, __unknown__]": {"__unknown__ [__unknown__, the, __unknown__]"},
-        "__unknown__ [ADP, the, ADJ]": {"__unknown__ [__unknown__, the, __unknown__]"},
-        "__unknown__ [__unknown__, DET, ADJ]": {"__unknown__ [__unknown__, the, __unknown__]"},
+        "NOUN [ADP, the, __unknown__]": {basepatterns_with_tokens["__unknown__ [__unknown__, the, __unknown__]"]},
+        "NOUN [__unknown__, DET, __unknown__]": {basepatterns_with_tokens["__unknown__ [__unknown__, the, __unknown__]"]},
+        "NOUN [__unknown__, the, ADJ]": {basepatterns_with_tokens["__unknown__ [__unknown__, the, __unknown__]"]},
+        "__unknown__ [ADP, DET, __unknown__]": {basepatterns_with_tokens["__unknown__ [__unknown__, the, __unknown__]"]},
+        "__unknown__ [ADP, the, ADJ]": {basepatterns_with_tokens["__unknown__ [__unknown__, the, __unknown__]"]},
+        "__unknown__ [__unknown__, DET, ADJ]": {basepatterns_with_tokens["__unknown__ [__unknown__, the, __unknown__]"]},
 
-        "NOUN [ADP, DET, __unknown__]": {"__unknown__ [__unknown__, the, __unknown__]"},
-        "NOUN [__unknown__, DET, ADJ]": {"__unknown__ [__unknown__, the, __unknown__]"},
-        "__unknown__ [ADP, DET, ADJ]": {"__unknown__ [__unknown__, the, __unknown__]"},
+        "NOUN [ADP, DET, __unknown__]": {basepatterns_with_tokens["__unknown__ [__unknown__, the, __unknown__]"]},
+        "NOUN [__unknown__, DET, ADJ]": {basepatterns_with_tokens["__unknown__ [__unknown__, the, __unknown__]"]},
+        "__unknown__ [ADP, DET, ADJ]": {basepatterns_with_tokens["__unknown__ [__unknown__, the, __unknown__]"]},
 
         # "bananas [,, and]"
-        "NOUN [,, __unknown__]": {"__unknown__ [,, __unknown__]"},
-        "__unknown__ [PUNCT, __unknown__]": {"__unknown__ [,, __unknown__]"},
-        "__unknown__ [,, __unknown__]": {"__unknown__ [,, __unknown__]"},
-        "NOUN [PUNCT, __unknown__]": {"__unknown__ [,, __unknown__]"},
+        "NOUN [,, __unknown__]": {basepatterns_with_tokens["__unknown__ [,, __unknown__]"]},
+        "__unknown__ [PUNCT, __unknown__]": {basepatterns_with_tokens["__unknown__ [,, __unknown__]"]},
+        "__unknown__ [,, __unknown__]": {basepatterns_with_tokens["__unknown__ [,, __unknown__]"]},
+        "NOUN [PUNCT, __unknown__]": {basepatterns_with_tokens["__unknown__ [,, __unknown__]"]},
 
         # "oranges,"
         # "pears,"
-        "__unknown__ PUNCT": {"__unknown__,"},
+        "__unknown__ PUNCT": {basepatterns_with_tokens["__unknown__,"]},
     }
 }
 
@@ -95,79 +214,79 @@ expected_patterns_without_phrase = {
 expected_patterns_with_phrase = {
     # "jumps [nsubj, nmod, .]"
     "jump [nsubj, nmod, .]": {
-        "jump [fox [the, quick, brown], dog [over, the, lazy], .]",
-        "jump [fox, dog [over, the, lazy], .]",
-        "jump [fox [the, quick, brown, __unknown__ [__unknown__, the, __unknown__]], dog [over, the, lazy], .]",
+        basepatterns_with_tokens["jump [fox [the, quick, brown], dog [over, the, lazy], .]"],
+        basepatterns_with_tokens["jump [fox, dog [over, the, lazy], .]"],
+        basepatterns_with_tokens["jump [fox [the, quick, brown, __unknown__ [__unknown__, the, __unknown__]], dog [over, the, lazy], .]"],
     },
     "VERB [nsubj, nmod, .]": {
-        "jump [fox [the, quick, brown], dog [over, the, lazy], .]",
-        "jump [fox, dog [over, the, lazy], .]",
-        "jump [fox [the, quick, brown, __unknown__ [__unknown__, the, __unknown__]], dog [over, the, lazy], .]",
+        basepatterns_with_tokens["jump [fox [the, quick, brown], dog [over, the, lazy], .]"],
+        basepatterns_with_tokens["jump [fox, dog [over, the, lazy], .]"],
+        basepatterns_with_tokens["jump [fox [the, quick, brown, __unknown__ [__unknown__, the, __unknown__]], dog [over, the, lazy], .]"],
     },
     "jump [nsubj, nmod, PUNCT]": {
-        "jump [fox [the, quick, brown], dog [over, the, lazy], .]",
-        "jump [fox, dog [over, the, lazy], .]",
-        "jump [fox [the, quick, brown, __unknown__ [__unknown__, the, __unknown__]], dog [over, the, lazy], .]",
+        basepatterns_with_tokens["jump [fox [the, quick, brown], dog [over, the, lazy], .]"],
+        basepatterns_with_tokens["jump [fox, dog [over, the, lazy], .]"],
+        basepatterns_with_tokens["jump [fox [the, quick, brown, __unknown__ [__unknown__, the, __unknown__]], dog [over, the, lazy], .]"],
     },
     "VERB [nsubj, nmod, PUNCT]": {
-        "jump [fox [the, quick, brown], dog [over, the, lazy], .]",
-        "jump [fox, dog [over, the, lazy], .]",
-        "jump [fox [the, quick, brown, __unknown__ [__unknown__, the, __unknown__]], dog [over, the, lazy], .]",
+        basepatterns_with_tokens["jump [fox [the, quick, brown], dog [over, the, lazy], .]"],
+        basepatterns_with_tokens["jump [fox, dog [over, the, lazy], .]"],
+        basepatterns_with_tokens["jump [fox [the, quick, brown, __unknown__ [__unknown__, the, __unknown__]], dog [over, the, lazy], .]"],
     },
 
     # "jump [Foxes, nmod, .]"
-    "jump [fox, nmod, .]": {"jump [fox, dog [over, the, lazy], .]"},
-    "VERB [fox, nmod, .]": {"jump [fox, dog [over, the, lazy], .]"},
-    "jump [NOUN, nmod, .]": {"jump [fox, dog [over, the, lazy], .]"},
-    "jump [fox, nmod, PUNCT]": {"jump [fox, dog [over, the, lazy], .]"},
-    "VERB [NOUN, nmod, .]": {"jump [fox, dog [over, the, lazy], .]"},
-    "VERB [fox, nmod, PUNCT]": {"jump [fox, dog [over, the, lazy], .]"},
-    "jump [NOUN, nmod, PUNCT]": {"jump [fox, dog [over, the, lazy], .]"},
-    "VERB [NOUN, nmod, PUNCT]": {"jump [fox, dog [over, the, lazy], .]"},
+    "jump [fox, nmod, .]": {basepatterns_with_tokens["jump [fox, dog [over, the, lazy], .]"]},
+    "VERB [fox, nmod, .]": {basepatterns_with_tokens["jump [fox, dog [over, the, lazy], .]"]},
+    "jump [NOUN, nmod, .]": {basepatterns_with_tokens["jump [fox, dog [over, the, lazy], .]"]},
+    "jump [fox, nmod, PUNCT]": {basepatterns_with_tokens["jump [fox, dog [over, the, lazy], .]"]},
+    "VERB [NOUN, nmod, .]": {basepatterns_with_tokens["jump [fox, dog [over, the, lazy], .]"]},
+    "VERB [fox, nmod, PUNCT]": {basepatterns_with_tokens["jump [fox, dog [over, the, lazy], .]"]},
+    "jump [NOUN, nmod, PUNCT]": {basepatterns_with_tokens["jump [fox, dog [over, the, lazy], .]"]},
+    "VERB [NOUN, nmod, PUNCT]": {basepatterns_with_tokens["jump [fox, dog [over, the, lazy], .]"]},
 
     # "have [We, obj, .]"
     "__unknown__ [__unknown__, __unknown__, .]": {
-        "__unknown__ [__unknown__, __unknown__ [__unknown__,, __unknown__,, __unknown__ [,, __unknown__]], .]"
+        basepatterns_with_tokens["__unknown__ [__unknown__, __unknown__ [__unknown__,, __unknown__,, __unknown__ [,, __unknown__]], .]"]
     },
     "VERB [__unknown__, __unknown__, .]": {
-        "__unknown__ [__unknown__, __unknown__ [__unknown__,, __unknown__,, __unknown__ [,, __unknown__]], .]"
+        basepatterns_with_tokens["__unknown__ [__unknown__, __unknown__ [__unknown__,, __unknown__,, __unknown__ [,, __unknown__]], .]"]
     },
     "__unknown__ [__unknown__, __unknown__, PUNCT]": {
-        "__unknown__ [__unknown__, __unknown__ [__unknown__,, __unknown__,, __unknown__ [,, __unknown__]], .]"
+        basepatterns_with_tokens["__unknown__ [__unknown__, __unknown__ [__unknown__,, __unknown__,, __unknown__ [,, __unknown__]], .]"]
     },
     "VERB [__unknown__, __unknown__, PUNCT]": {
-        "__unknown__ [__unknown__, __unknown__ [__unknown__,, __unknown__,, __unknown__ [,, __unknown__]], .]"
+        basepatterns_with_tokens["__unknown__ [__unknown__, __unknown__ [__unknown__,, __unknown__,, __unknown__ [,, __unknown__]], .]"]
     },
 
     # "apples [conj, conj, conj]"
     "__unknown__ [conj, conj, conj]": {
-        "__unknown__ [__unknown__,, __unknown__,, __unknown__ [,, __unknown__]]"
+        basepatterns_with_tokens["__unknown__ [__unknown__,, __unknown__,, __unknown__ [,, __unknown__]]"]
     },
     "NOUN [conj, conj, conj]": {
-        "__unknown__ [__unknown__,, __unknown__,, __unknown__ [,, __unknown__]]"
+        basepatterns_with_tokens["__unknown__ [__unknown__,, __unknown__,, __unknown__ [,, __unknown__]]"]
     }
 }
 
 expected_basepatterns_without_phrase_without_unknown = {
-    "fox [the, quick, brown]": [1],
-    "dog [over, the, lazy]": [1,2,3],
-    "__unknown__ [__unknown__, the, __unknown__]": [3],
-    "__unknown__,": [4,4]
+    basepatterns_with_tokens["fox [the, quick, brown]"]: [1],
+    basepatterns_with_tokens["dog [over, the, lazy]"]: [1,2,3],
+    basepatterns_with_tokens["__unknown__ [__unknown__, the, __unknown__]"]: [3],
+    basepatterns_with_tokens["__unknown__,"]: [4,4]
 }
 
 expected_basepatterns_without_phrase = {
     **expected_basepatterns_without_phrase_without_unknown,
     **{
-        "__unknown__ [,, __unknown__]": [4],
+        basepatterns_with_tokens["__unknown__ [,, __unknown__]"]: [4],
     }
 }
 
 expected_basepatterns_with_phrase = {
-    "jump [fox [the, quick, brown], dog [over, the, lazy], .]": [1],
-    "jump [fox, dog [over, the, lazy], .]": [2],
-    "jump [fox [the, quick, brown, __unknown__ [__unknown__, the, __unknown__]], dog [over, the, lazy], .]": [3],
-    "__unknown__ [__unknown__, __unknown__ [__unknown__,, __unknown__,, __unknown__ [,, __unknown__]], .]": [4],
-    "__unknown__ [__unknown__,, __unknown__,, __unknown__ [,, __unknown__]]": [4]
+    basepatterns_with_tokens["jump [fox [the, quick, brown], dog [over, the, lazy], .]"]: [1],
+    basepatterns_with_tokens["jump [fox, dog [over, the, lazy], .]"]: [2],
+    basepatterns_with_tokens["jump [fox [the, quick, brown, __unknown__ [__unknown__, the, __unknown__]], dog [over, the, lazy], .]"]: [3],
+    basepatterns_with_tokens["__unknown__ [__unknown__, __unknown__ [__unknown__,, __unknown__,, __unknown__ [,, __unknown__]], .]"]: [4],
+    basepatterns_with_tokens["__unknown__ [__unknown__,, __unknown__,, __unknown__ [,, __unknown__]]"]: [4]
 }
 
 @pytest.mark.parametrize("parameters,expected_patterns,expected_basepatterns", [
@@ -202,11 +321,8 @@ def test_extract_patterns_with_phrases(parameters, expected_patterns, expected_b
             infile_path,
             patterns_list_filename,
             base_list_filename,
-            'lemma'] + parameters +
-            [
-                '--encoded_dictionaries',
-                dictfile_path
-            ]
+            dictfile_path,
+            'lemma'] + parameters
         )
 
         # files need to be sorted
@@ -300,9 +416,8 @@ def test_extract_patterns_with_logging(tofile):
             infile_path,
             patterns_filename,
             base_filename,
-            'lemma',
-            '--encoded_dictionaries',
-            dictfile_path
+            dictfile_path,
+            'lemma'
         ])
 
         assert os.path.isfile(log_filename)

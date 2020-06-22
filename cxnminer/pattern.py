@@ -145,7 +145,7 @@ class SNGram(Pattern):
 
         element_list = [head.token]
 
-        if head.children is not None:
+        if head.children is not None and len(head.children) >= 1:
             if len(head.children) == 1:
                 element_list.extend(self._get_subtree_list(head.children[0]))
             else:
@@ -279,3 +279,13 @@ class TokenSNGram(SNGram, TokenPattern):
             raise RuntimeError("Created more than one pattern.") # pragma: no cover
 
         return SNGram(tree_list[0], self.LEFT_BRACKET, self.RIGHT_BRACKET, self.COMMA)
+
+    def _return_orig_tree(self, head):
+
+        if getattr(head, 'orig_tree', None) is not None:
+            head = head.orig_tree
+        return SNGram.Tree(head.token, [ self._return_orig_tree(child) for child in head.children ])
+
+    def get_full_pattern(self):
+
+        return TokenSNGram(self._return_orig_tree(self.tree), self.LEFT_BRACKET, self.RIGHT_BRACKET, self.COMMA)
