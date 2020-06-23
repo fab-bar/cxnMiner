@@ -67,11 +67,16 @@ if __name__ == "__main__":
     encoder = Base64Encoder(PatternEncoder.load(encoder_file), binary=False)
 
   encoded_vocabularies = collections.defaultdict(dict)
-  for level in vocabularies.keys():
+  levels = set(vocabularies.keys())
+  if args.unknown is not None:
+    print(encoder.get_levels())
+    levels.update(encoder.get_levels())
+
+  for level in levels:
     if not args.no_frequencies:
-      items = vocabularies[level].keys()
+      items = vocabularies.get(level, {}).keys()
     else:
-      items = vocabularies[level]
+      items = vocabularies.get(level, [])
 
     logger.info("Start encoding level " + level + " with " + str(len(items)) + " elements.")
 

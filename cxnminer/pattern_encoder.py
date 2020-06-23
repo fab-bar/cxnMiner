@@ -30,6 +30,10 @@ class PatternEncoder(metaclass=abc.ABCMeta):
         pass # pragma: no cover
 
     @abc.abstractmethod
+    def get_levels(self):
+        pass # pragma: no cover
+
+    @abc.abstractmethod
     def append(self, encoded_pattern, encoded_item):
         pass # pragma: no cover
 
@@ -100,6 +104,8 @@ class Base64Encoder(PatternEncoder):
         self.encoder = encoder
         self.binary = binary
 
+    def get_levels(self):
+        return self.encoder.get_levels()
 
     def get_pattern_type(self):
 
@@ -200,6 +206,9 @@ class BitEncoder(PatternEncoder):
         dict_size = self.special_offset + len(self.special_characters) + 2
         self.element_size = math.floor(math.log(dict_size-1, 2) + 1)
 
+
+    def get_levels(self):
+        return set(self.level_offsets.keys())
 
     def _get_word_for_id(self, word_id):
 
@@ -337,6 +346,8 @@ class HuffmanEncoder(CombinablePatternEncoder):
         huffman_freq_dict = {}
         max_freq = 0
 
+        self.levels = set(frequency_dictionaries.keys())
+
         for level, dict_ in frequency_dictionaries.items():
             for word, freq in dict_.items():
 
@@ -358,6 +369,9 @@ class HuffmanEncoder(CombinablePatternEncoder):
         huffman_freq_dict[self.token_end] = max(max_freq, special_frequency)
 
         self.huffman_dict = bitarray.util.huffman_code(huffman_freq_dict)
+
+    def get_levels(self):
+        return self.levels
 
     @classmethod
     def _bytes_2_bitarray(cls, bytes_):
