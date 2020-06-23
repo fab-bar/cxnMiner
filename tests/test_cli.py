@@ -1,9 +1,12 @@
+import filecmp
 import json
+import os
 import os.path
 
 import pytest
 from click.testing import CliRunner
 
+from cxnminer.pattern import PatternElement
 from cxnminer.pattern_encoder import PatternEncoder, Base64Encoder
 from cxnminer.cli import main
 
@@ -246,3 +249,104 @@ def test_extract_patterns_with_logging(tofile):
         ])
 
         assert os.path.isfile(log_filename)
+
+
+############################ tests for scripts in bin
+
+def test_extract_vocabulary():
+
+    infile_path = os.path.abspath('example_data/example_data.conllu')
+    expected_outfile_path = os.path.abspath('example_data/example_data_dict.json')
+    script_file = os.path.abspath('bin/extract_vocabulary')
+
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+
+        outfile = "example_data_dict.json"
+
+        os.system(script_file + " " + infile_path + " " + outfile + " lemma upostag np_function")
+
+        expected_dict = json.load(open(expected_outfile_path, 'r'))
+        result_dict = json.load(open(outfile, 'r'))
+
+    assert result_dict == expected_dict
+
+def test_filter_vocabulary():
+
+    infile_path = os.path.abspath('example_data/example_data_dict.json')
+    expected_outfile_path = os.path.abspath('example_data/example_data_dict_filtered.json')
+    script_file = os.path.abspath('bin/filter_vocabulary')
+
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+
+        outfile = "example_data_dict_filtered.json"
+
+        os.system(script_file + " " + infile_path + " " + outfile + " 2")
+
+        expected_dict = json.load(open(expected_outfile_path, 'r'))
+        result_dict = json.load(open(outfile, 'r'))
+
+    assert result_dict == expected_dict
+
+def test_create_encoder():
+
+    infile_path = os.path.abspath('example_data/example_data_dict_filtered.json')
+    script_file = os.path.abspath('bin/create_encoder')
+
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+
+        outfile = "example_data_encoder"
+
+        exit_status = os.system(script_file + " " + infile_path + " " + outfile)
+
+        encoder = Base64Encoder(PatternEncoder.load(open(outfile, 'rb')))
+        dict_ = json.load(open(infile_path, 'r'))
+
+        pattern_elements = [PatternElement(word, level) for level, elements in dict_.items() for word in elements.keys()]
+        results = [
+            encoder.decode(encoder.encode_item(pe)).get_element_list()[0] == pe for pe in pattern_elements
+        ]
+
+    assert all(results)
+
+def test_encode_vocabulary():
+
+    infile_path = os.path.abspath('example_data/example_data_dict_filtered.json')
+    encoder_path = os.path.abspath('example_data/example_data_encoder')
+    script_file = os.path.abspath('bin/encode_vocabulary')
+
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+
+        outfile = "example_data_dict_filtered_encoded.json"
+
+        os.system(script_file + " " + infile_path + " " + outfile + " " + encoder_path)
+
+        encoder = Base64Encoder(PatternEncoder.load(open(encoder_path, 'rb')))
+
+        result_dict = json.load(open(outfile, 'r'))
+
+        results = [(level, decoded, encoder.decode(encoded).get_element_list()) for level, elements in result_dict.items() for decoded, encoded in elements.items()]
+        results = [len(pe) == 1 and pe[0].level == level and pe[0].form == word for level, word, pe in results]
+
+    assert all(results)
+
+def test_encode_corpus():
+
+    infile_path = os.path.abspath('example_data/example_data.conllu')
+    encoded_dict_path = os.path.abspath('example_data/example_data_dict_filtered_encoded.json')
+    encoder_path = os.path.abspath('example_data/example_data_encoder')
+    expected_outfile_path = os.path.abspath('example_data/example_data_encoded.conllu')
+    script_file = os.path.abspath('bin/encode_corpus')
+
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+
+        outfile = "example_data_encoded.conllu"
+
+        os.system(script_file + " " + infile_path + " " + outfile + " " + encoded_dict_path + " lemma upostag np_function --encoder_file " + encoder_path)
+
+
+        assert filecmp.cmp(outfile, expected_outfile_path, shallow=False)
