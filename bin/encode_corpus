@@ -98,7 +98,7 @@ if __name__ == "__main__":
                 ## write encoded data into token
                 token[level_name] = encode_item(level, level_name, token, vocabulary, unknown, logger)
 
-        logger.info("Encoded sentence " + sentence.metadata['sent_id'])
+        logger.info("Encoded sentence " + sentence.metadata.get('sent_id', sentence.metadata.get('text', '')))
         return sentence
 
     with open_file(args.outfile, 'w') as outfile:
