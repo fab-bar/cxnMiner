@@ -88,6 +88,7 @@ Extract a dictionary of possible pattern elements to create an encoder.
 .. code-block:: bash
 
   bin/extract_vocabulary infile outfile lemma upostag
+  bin/extract_vocabulary example_data/example_data.conllu example_data/example_data_dict.json lemma upostag np_function
 
 Options
 +++++++
@@ -127,6 +128,7 @@ Remove items with a frequency below a given threshold from an extracted dictiona
 .. code-block:: bash
 
   bin/filter_vocabulary dictionaries outfile min_frequency
+  bin/filter_vocabulary example_data/example_data_dict.json example_data/example_data_dict_filtered.json 2
 
 Options
 +++++++
@@ -151,6 +153,7 @@ Create and pickle an encoder based on an extracted dictionary.
 .. code-block:: bash
 
   bin/create_encoder dictionaries outfile
+  bin/create_encoder example_data/example_data_dict_filtered.json example_data/example_data_encoder
 
 Options
 +++++++
@@ -176,6 +179,7 @@ to encode the corpus using lookup.
 .. code-block:: bash
 
   bin/encode_vocabulary vocabulary outfile encoder
+  bin/encode_vocabulary example_data/example_data_dict_filtered.json example_data/example_data_dict_filtered_encoded.json example_data/example_data_encoder --add_special
 
 Options
 +++++++
@@ -211,6 +215,7 @@ Uses an encoded dicitionary to efficiently encode the corpus.
 .. code-block:: bash
 
   bin/encode_corpus infile outfile dictionary lemma upostag
+  bin/encode_corpus example_data/example_data.conllu example_data/example_data_encoded.conllu example_data/example_data_dict_filtered_encoded.json lemma upostag np_function --encoder_file example_data/example_data_encoder
 
 Options
 +++++++
