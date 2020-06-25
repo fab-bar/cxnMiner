@@ -223,12 +223,18 @@ def test_extract_patterns_with_phrases(parameters, expected_patterns, expected_b
             patterns_filename,
         ])
 
-        patterns = json.load(open(patterns_filename))
-        basepatterns = json.load(open(base_filename))
+        patterns = {}
+        for line in open(patterns_filename):
+            pattern, base_patterns = json.loads(line)
+            patterns[pattern] = base_patterns
+
+        basepatterns = []
+        for line in open(base_filename):
+            basepatterns.append(json.loads(line))
 
         encoder = Base64Encoder(PatternEncoder.load(open(encoder_path, 'rb')))
         patterns = {str(encoder.decode(pattern)): set([str(encoder.decode(base)) for base in bases]) for pattern, bases in patterns.items()}
-        basepatterns = {str(encoder.decode(pattern)): content for pattern, content in basepatterns.items()}
+        basepatterns = {str(encoder.decode(pattern)): content for pattern, content in basepatterns}
 
         assert patterns == expected_patterns
 

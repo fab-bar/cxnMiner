@@ -213,5 +213,5 @@ def convert_pattern_list(ctx, infile, outfile, is_int):
 
     with open_file(outfile, 'w') as outfile:
         for pattern in patterns.keys():
-            patterns[pattern] = list(patterns[pattern])
-        json.dump(patterns, outfile)
+            json.dump([pattern, list(patterns[pattern])], outfile)
+            outfile.write("\n")
