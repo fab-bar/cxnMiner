@@ -170,6 +170,8 @@ class SNGram(Pattern):
             open_brackets = 1
             closing_index = 0
 
+            ## get parts separated by comma
+            parts = []
             while open_brackets:
 
                 closing_index += 1
@@ -177,25 +179,34 @@ class SNGram(Pattern):
                     open_brackets -= 1
                 elif rest[closing_index] == left_bracket:
                     open_brackets += 1
+                elif open_brackets == 1 and rest[closing_index] == comma:
+                    parts.append(closing_index)
 
-            ## if RIGHT_BRACKET is not at the end it needs to be a comma
+            parts.append(closing_index)
+            children = []
+            start = 1
+            for part in parts:
+                children.extend(cls._tree_from_element_list(rest[start:part],
+                                                            left_bracket, right_bracket, comma))
+                start = part + 1
+
+            children = tuple(children)
+
+            trees = [cls.Tree(head, tuple(children))]
+
             if closing_index + 1 < len(rest):
-                trees = [cls.Tree(head, cls._tree_from_element_list(rest[1:closing_index],
-                                                                    left_bracket, right_bracket, comma))]
-                trees.extend(cls._tree_from_element_list(rest[closing_index+2:],
-                                                         left_bracket, right_bracket, comma))
-                return  tuple(trees)
-            else:
-                return  (cls.Tree(head, cls._tree_from_element_list(rest[1:closing_index],
-                                                                    left_bracket, right_bracket, comma)),)
+                ## should not happen as parts in brackets are extracted
+                raise ValueError("Could not convert element list.")  # pragma: no cover
+
+            return tuple(trees)
 
         elif rest[0] == comma:
-            trees = [cls.Tree(head, None)]
-            trees.extend(cls._tree_from_element_list(rest[1:], left_bracket, right_bracket, comma))
-            return tuple(trees)
+            ## should only happen when there appears a comma that is not enclosed in brackets
+            ## which is not allowed
+            raise ValueError("Could not convert element list: Syntactic n-grams need a single head.")  # pragma: no cover
         else:
             ## next element is a pattern element
-            return (cls.Tree(head, cls._tree_from_element_list(rest, left_bracket, right_bracket, comma)),)
+            return (cls.Tree(head, tuple(cls._tree_from_element_list(rest, left_bracket, right_bracket, comma))),)
 
     @classmethod
     def from_element_list(cls, element_list,

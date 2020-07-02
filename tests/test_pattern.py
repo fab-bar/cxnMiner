@@ -251,7 +251,41 @@ def case_sidorov2():
         ]
     }
 
+def case_apples():
 
+    data = """
+# text = apples, pears, oranges, and bananas.
+1   apples   apple  NOUN    NN   Number=Plur                  0   obj    _   _
+2   ,     ,    PUNCT   ,   _                 3   punct   _   _
+3   pears     pear    NOUN   NN   Number=Plur                 1   conj   _   _
+4   ,     ,    PUNCT   ,   _    5   punct   _   _
+5   oranges     orange    NOUN   NN   Number=Plur                 1   conj   _   _
+6   ,     ,    PUNCT   ,   _                 8   punct   _   _
+7   and   and   SCONJ   CC  _   8   cc    _   _
+8   bananas    banana   NOUN    NN   Number=Plur                           1   conj    _   _
+
+"""
+    return TokenSNGram(conllu.parse_tree(data)[0]), {
+        "length": 8,
+        "str": "apples [pears,, oranges,, bananas [,, and]]",
+        "repr": [
+            PatternElement('apples', 'form', 1),
+            SNGram.LEFT_BRACKET,
+            PatternElement('pears', 'form', 3),
+            PatternElement(',', 'form', 2),
+            SNGram.COMMA,
+            PatternElement('oranges', 'form', 5),
+            PatternElement(',', 'form', 4),
+            SNGram.COMMA,
+            PatternElement('bananas', 'form', 8),
+            SNGram.LEFT_BRACKET,
+            PatternElement(',', 'form', 6),
+            SNGram.COMMA,
+            PatternElement('and', 'form', 7),
+            SNGram.RIGHT_BRACKET,
+            SNGram.RIGHT_BRACKET
+        ]
+    }
 
 @cases_data(module=THIS_MODULE)
 def test_sngram_length(case_data):
