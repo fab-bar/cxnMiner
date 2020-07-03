@@ -61,7 +61,7 @@ def main(ctx, logging_config):
 
 def conversion_function(tree, tags):
 
-    if tree.token['upostag'] in tags:
+    if tree.token['upos'] in tags:
         return SNGram.Tree(dict({'np_function': tree.token['deprel'], 'id': tree.token['id']}), [])
     else:
         return None
@@ -75,7 +75,7 @@ def encode_pattern(pattern, token_start, token_end, unknowns):
             ## can be special element (string), or a PatternElement
             current_list = [(str(element), getattr(element, 'get', lambda x, y: None)('level', None))]
         else:
-            current_list = [(token_start, None)] + [(word, level) for level, word in element.items() if level in {'lemma', 'upostag', 'deprel'}] + [(token_end, None)]
+            current_list = [(token_start, None)] + [(word, level) for level, word in element.items() if level in {'lemma', 'upos', 'deprel'}] + [(token_end, None)]
 
         for element, level in current_list:
             ## just a quick fix - np_function needs to be handled differently
@@ -119,7 +119,7 @@ def pattern_extraction(sentence_tuple, extractor, word_level, token_start, token
 
 
         if keep_only_word is None or any([getattr(element, "get", lambda x, y: None)(word_level, None) == keep_only_word for element in tpattern.get_full_pattern().get_element_list()]):
-            for pattern in tpattern.get_pattern_list(frozenset(['lemma', 'upostag', 'np_function'])):
+            for pattern in tpattern.get_pattern_list(frozenset(['lemma', 'upos', 'np_function'])):
 
                 if pattern != base_level_pattern:
                     ### only keep patterns that consist of given vocabulary entries
@@ -183,7 +183,7 @@ def extract_patterns(ctx, infile, outfile_patterns, outfile_base, encoded_dictio
         known = None
 
     if phrase_tags:
-        phrase_tags = [encoded_dict.get("upostag", {}).get(element, element) for element in phrase_tags]
+        phrase_tags = [encoded_dict.get("upos", {}).get(element, element) for element in phrase_tags]
         special_node_conversion = functools.partial(conversion_function, tags=phrase_tags)
     else:
         special_node_conversion = None

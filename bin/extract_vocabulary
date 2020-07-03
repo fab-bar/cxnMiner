@@ -12,9 +12,9 @@ from cxnminer.utils.helpers import open_file
 FEATURE_EXTRACTORS = {
     "form": lambda token: token['form'],
     "lemma": lambda token: token['lemma'],
-    "upostag": lambda token: token['upostag'],
-    "xpostag": lambda token: token['xpostag'],
-    "np_function": lambda token: token['deprel'] if token['upostag'] == "NOUN" else None,
+    "upos": lambda token: token['upos'],
+    "xpos": lambda token: token['xpos'],
+    "np_function": lambda token: token['deprel'] if token['upos'] == "NOUN" else None,
 }
 
 if __name__ == "__main__":

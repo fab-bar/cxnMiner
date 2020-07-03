@@ -12,116 +12,116 @@ from cxnminer.cli import main
 
 basepatterns_with_tokens = {
     "dog [over, the, lazy]":
-        "{'lemma': 'dog', 'upostag': 'NOUN', 'np_function': 'nmod'} "
+        "{'lemma': 'dog', 'upos': 'NOUN', 'np_function': 'nmod'} "
     +       "["
-    +       "{'lemma': 'over', 'upostag': 'ADP', 'np_function': '__unknown__'}, "
-    +       "{'lemma': 'the', 'upostag': 'DET', 'np_function': '__unknown__'}, "
-    +       "{'lemma': 'lazy', 'upostag': 'ADJ', 'np_function': '__unknown__'}"
+    +       "{'lemma': 'over', 'upos': 'ADP', 'np_function': '__unknown__'}, "
+    +       "{'lemma': 'the', 'upos': 'DET', 'np_function': '__unknown__'}, "
+    +       "{'lemma': 'lazy', 'upos': 'ADJ', 'np_function': '__unknown__'}"
     +       "]",
     "fox [the, quick, brown]":
-        "{'lemma': 'fox', 'upostag': 'NOUN', 'np_function': 'nsubj'} "
+        "{'lemma': 'fox', 'upos': 'NOUN', 'np_function': 'nsubj'} "
     +       "["
-    +       "{'lemma': 'the', 'upostag': 'DET', 'np_function': '__unknown__'}, "
-    +       "{'lemma': 'quick', 'upostag': 'ADJ', 'np_function': '__unknown__'}, "
-    +       "{'lemma': 'brown', 'upostag': 'ADJ', 'np_function': '__unknown__'}"
+    +       "{'lemma': 'the', 'upos': 'DET', 'np_function': '__unknown__'}, "
+    +       "{'lemma': 'quick', 'upos': 'ADJ', 'np_function': '__unknown__'}, "
+    +       "{'lemma': 'brown', 'upos': 'ADJ', 'np_function': '__unknown__'}"
     +       "]",
     "__unknown__ [__unknown__, the, __unknown__]":
-        "{'lemma': '__unknown__', 'upostag': 'NOUN', 'np_function': 'nmod'} "
+        "{'lemma': '__unknown__', 'upos': 'NOUN', 'np_function': 'nmod'} "
     +       "["
-    +       "{'lemma': '__unknown__', 'upostag': 'ADP', 'np_function': '__unknown__'}, "
-    +       "{'lemma': 'the', 'upostag': 'DET', 'np_function': '__unknown__'}, "
-    +       "{'lemma': '__unknown__', 'upostag': 'ADJ', 'np_function': '__unknown__'}"
+    +       "{'lemma': '__unknown__', 'upos': 'ADP', 'np_function': '__unknown__'}, "
+    +       "{'lemma': 'the', 'upos': 'DET', 'np_function': '__unknown__'}, "
+    +       "{'lemma': '__unknown__', 'upos': 'ADJ', 'np_function': '__unknown__'}"
     +       "]",
     "__unknown__,":
-        "{'lemma': '__unknown__', 'upostag': 'NOUN', 'np_function': 'conj'} "
-    +       "{'lemma': ',', 'upostag': 'PUNCT', 'np_function': '__unknown__'}",
+        "{'lemma': '__unknown__', 'upos': 'NOUN', 'np_function': 'conj'} "
+    +       "{'lemma': ',', 'upos': 'PUNCT', 'np_function': '__unknown__'}",
     "__unknown__ [,, __unknown__]":
-        "{'lemma': '__unknown__', 'upostag': 'NOUN', 'np_function': 'conj'} "
+        "{'lemma': '__unknown__', 'upos': 'NOUN', 'np_function': 'conj'} "
     +       "["
-    +       "{'lemma': ',', 'upostag': 'PUNCT', 'np_function': '__unknown__'}, "
-    +       "{'lemma': '__unknown__', 'upostag': '__unknown__', 'np_function': '__unknown__'}"
+    +       "{'lemma': ',', 'upos': 'PUNCT', 'np_function': '__unknown__'}, "
+    +       "{'lemma': '__unknown__', 'upos': '__unknown__', 'np_function': '__unknown__'}"
     +       "]",
     "jump [fox [the, quick, brown], dog [over, the, lazy], .]":
-        "{'lemma': 'jump', 'upostag': 'VERB', 'np_function': '__unknown__'} "
+        "{'lemma': 'jump', 'upos': 'VERB', 'np_function': '__unknown__'} "
     +       "["
-    +       "{'lemma': 'fox', 'upostag': 'NOUN', 'np_function': 'nsubj'} "
+    +       "{'lemma': 'fox', 'upos': 'NOUN', 'np_function': 'nsubj'} "
     +           "["
-    +           "{'lemma': 'the', 'upostag': 'DET', 'np_function': '__unknown__'}, "
-    +           "{'lemma': 'quick', 'upostag': 'ADJ', 'np_function': '__unknown__'}, "
-    +           "{'lemma': 'brown', 'upostag': 'ADJ', 'np_function': '__unknown__'}"
+    +           "{'lemma': 'the', 'upos': 'DET', 'np_function': '__unknown__'}, "
+    +           "{'lemma': 'quick', 'upos': 'ADJ', 'np_function': '__unknown__'}, "
+    +           "{'lemma': 'brown', 'upos': 'ADJ', 'np_function': '__unknown__'}"
     +           "], "
-    +       "{'lemma': 'dog', 'upostag': 'NOUN', 'np_function': 'nmod'} "
+    +       "{'lemma': 'dog', 'upos': 'NOUN', 'np_function': 'nmod'} "
     +           "["
-    +           "{'lemma': 'over', 'upostag': 'ADP', 'np_function': '__unknown__'}, "
-    +           "{'lemma': 'the', 'upostag': 'DET', 'np_function': '__unknown__'}, "
-    +           "{'lemma': 'lazy', 'upostag': 'ADJ', 'np_function': '__unknown__'}"
+    +           "{'lemma': 'over', 'upos': 'ADP', 'np_function': '__unknown__'}, "
+    +           "{'lemma': 'the', 'upos': 'DET', 'np_function': '__unknown__'}, "
+    +           "{'lemma': 'lazy', 'upos': 'ADJ', 'np_function': '__unknown__'}"
     +           "], "
-    +       "{'lemma': '.', 'upostag': 'PUNCT', 'np_function': '__unknown__'}"
+    +       "{'lemma': '.', 'upos': 'PUNCT', 'np_function': '__unknown__'}"
     +       "]",
     "jump [fox, dog [over, the, lazy], .]":
-        "{'lemma': 'jump', 'upostag': 'VERB', 'np_function': '__unknown__'} "
+        "{'lemma': 'jump', 'upos': 'VERB', 'np_function': '__unknown__'} "
     +       "["
-    +       "{'lemma': 'fox', 'upostag': 'NOUN', 'np_function': 'nsubj'}, "
-    +       "{'lemma': 'dog', 'upostag': 'NOUN', 'np_function': 'nmod'} "
+    +       "{'lemma': 'fox', 'upos': 'NOUN', 'np_function': 'nsubj'}, "
+    +       "{'lemma': 'dog', 'upos': 'NOUN', 'np_function': 'nmod'} "
     +           "["
-    +           "{'lemma': 'over', 'upostag': 'ADP', 'np_function': '__unknown__'}, "
-    +           "{'lemma': 'the', 'upostag': 'DET', 'np_function': '__unknown__'}, "
-    +           "{'lemma': 'lazy', 'upostag': 'ADJ', 'np_function': '__unknown__'}"
+    +           "{'lemma': 'over', 'upos': 'ADP', 'np_function': '__unknown__'}, "
+    +           "{'lemma': 'the', 'upos': 'DET', 'np_function': '__unknown__'}, "
+    +           "{'lemma': 'lazy', 'upos': 'ADJ', 'np_function': '__unknown__'}"
     +           "], "
-    +       "{'lemma': '.', 'upostag': 'PUNCT', 'np_function': '__unknown__'}"
+    +       "{'lemma': '.', 'upos': 'PUNCT', 'np_function': '__unknown__'}"
     +       "]",
     "jump [fox [the, quick, brown, __unknown__ [__unknown__, the, __unknown__]], dog [over, the, lazy], .]":
-        "{'lemma': 'jump', 'upostag': 'VERB', 'np_function': '__unknown__'} "
+        "{'lemma': 'jump', 'upos': 'VERB', 'np_function': '__unknown__'} "
     +       "["
-    +       "{'lemma': 'fox', 'upostag': 'NOUN', 'np_function': 'nsubj'} "
+    +       "{'lemma': 'fox', 'upos': 'NOUN', 'np_function': 'nsubj'} "
     +           "["
-    +           "{'lemma': 'the', 'upostag': 'DET', 'np_function': '__unknown__'}, "
-    +           "{'lemma': 'quick', 'upostag': 'ADJ', 'np_function': '__unknown__'}, "
-    +           "{'lemma': 'brown', 'upostag': 'ADJ', 'np_function': '__unknown__'}, "
-    +           "{'lemma': '__unknown__', 'upostag': 'NOUN', 'np_function': 'nmod'} "
+    +           "{'lemma': 'the', 'upos': 'DET', 'np_function': '__unknown__'}, "
+    +           "{'lemma': 'quick', 'upos': 'ADJ', 'np_function': '__unknown__'}, "
+    +           "{'lemma': 'brown', 'upos': 'ADJ', 'np_function': '__unknown__'}, "
+    +           "{'lemma': '__unknown__', 'upos': 'NOUN', 'np_function': 'nmod'} "
     +               "["
-    +               "{'lemma': '__unknown__', 'upostag': 'ADP', 'np_function': '__unknown__'}, "
-    +               "{'lemma': 'the', 'upostag': 'DET', 'np_function': '__unknown__'}, "
-    +               "{'lemma': '__unknown__', 'upostag': 'ADJ', 'np_function': '__unknown__'}"
+    +               "{'lemma': '__unknown__', 'upos': 'ADP', 'np_function': '__unknown__'}, "
+    +               "{'lemma': 'the', 'upos': 'DET', 'np_function': '__unknown__'}, "
+    +               "{'lemma': '__unknown__', 'upos': 'ADJ', 'np_function': '__unknown__'}"
     +               "]"
     +           "], "
-    +       "{'lemma': 'dog', 'upostag': 'NOUN', 'np_function': 'nmod'} "
+    +       "{'lemma': 'dog', 'upos': 'NOUN', 'np_function': 'nmod'} "
     +           "["
-    +               "{'lemma': 'over', 'upostag': 'ADP', 'np_function': '__unknown__'}, "
-    +               "{'lemma': 'the', 'upostag': 'DET', 'np_function': '__unknown__'}, "
-    +               "{'lemma': 'lazy', 'upostag': 'ADJ', 'np_function': '__unknown__'}], "
-    +               "{'lemma': '.', 'upostag': 'PUNCT', 'np_function': '__unknown__'}"
+    +               "{'lemma': 'over', 'upos': 'ADP', 'np_function': '__unknown__'}, "
+    +               "{'lemma': 'the', 'upos': 'DET', 'np_function': '__unknown__'}, "
+    +               "{'lemma': 'lazy', 'upos': 'ADJ', 'np_function': '__unknown__'}], "
+    +               "{'lemma': '.', 'upos': 'PUNCT', 'np_function': '__unknown__'}"
     +           "]",
     "__unknown__ [__unknown__,, __unknown__,, __unknown__ [,, __unknown__]]":
-        "{'lemma': '__unknown__', 'upostag': 'NOUN', 'np_function': '__unknown__'} "
+        "{'lemma': '__unknown__', 'upos': 'NOUN', 'np_function': '__unknown__'} "
     +       "["
-    +       "{'lemma': '__unknown__', 'upostag': 'NOUN', 'np_function': 'conj'} "
-    +           "{'lemma': ',', 'upostag': 'PUNCT', 'np_function': '__unknown__'}, "
-    +       "{'lemma': '__unknown__', 'upostag': 'NOUN', 'np_function': 'conj'} "
-    +           "{'lemma': ',', 'upostag': 'PUNCT', 'np_function': '__unknown__'}, "
-    +       "{'lemma': '__unknown__', 'upostag': 'NOUN', 'np_function': 'conj'} "
+    +       "{'lemma': '__unknown__', 'upos': 'NOUN', 'np_function': 'conj'} "
+    +           "{'lemma': ',', 'upos': 'PUNCT', 'np_function': '__unknown__'}, "
+    +       "{'lemma': '__unknown__', 'upos': 'NOUN', 'np_function': 'conj'} "
+    +           "{'lemma': ',', 'upos': 'PUNCT', 'np_function': '__unknown__'}, "
+    +       "{'lemma': '__unknown__', 'upos': 'NOUN', 'np_function': 'conj'} "
     +           "["
-    +           "{'lemma': ',', 'upostag': 'PUNCT', 'np_function': '__unknown__'}, "
-    +           "{'lemma': '__unknown__', 'upostag': '__unknown__', 'np_function': '__unknown__'}"
+    +           "{'lemma': ',', 'upos': 'PUNCT', 'np_function': '__unknown__'}, "
+    +           "{'lemma': '__unknown__', 'upos': '__unknown__', 'np_function': '__unknown__'}"
     +           "]"
     +       "]",
     "__unknown__ [__unknown__, __unknown__ [__unknown__,, __unknown__,, __unknown__ [,, __unknown__]], .]":
-        "{'lemma': '__unknown__', 'upostag': 'VERB', 'np_function': '__unknown__'} "
+        "{'lemma': '__unknown__', 'upos': 'VERB', 'np_function': '__unknown__'} "
     +       "["
-    +       "{'lemma': '__unknown__', 'upostag': '__unknown__', 'np_function': 'nsubj'}, "
-    +       "{'lemma': '__unknown__', 'upostag': 'NOUN', 'np_function': '__unknown__'} "
+    +       "{'lemma': '__unknown__', 'upos': '__unknown__', 'np_function': 'nsubj'}, "
+    +       "{'lemma': '__unknown__', 'upos': 'NOUN', 'np_function': '__unknown__'} "
     +           "["
-    +           "{'lemma': '__unknown__', 'upostag': 'NOUN', 'np_function': 'conj'} "
-    +               "{'lemma': ',', 'upostag': 'PUNCT', 'np_function': '__unknown__'}, "
-    +           "{'lemma': '__unknown__', 'upostag': 'NOUN', 'np_function': 'conj'} "
-    +               "{'lemma': ',', 'upostag': 'PUNCT', 'np_function': '__unknown__'}, "
-    +           "{'lemma': '__unknown__', 'upostag': 'NOUN', 'np_function': 'conj'} "
+    +           "{'lemma': '__unknown__', 'upos': 'NOUN', 'np_function': 'conj'} "
+    +               "{'lemma': ',', 'upos': 'PUNCT', 'np_function': '__unknown__'}, "
+    +           "{'lemma': '__unknown__', 'upos': 'NOUN', 'np_function': 'conj'} "
+    +               "{'lemma': ',', 'upos': 'PUNCT', 'np_function': '__unknown__'}, "
+    +           "{'lemma': '__unknown__', 'upos': 'NOUN', 'np_function': 'conj'} "
     +               "["
-    +               "{'lemma': ',', 'upostag': 'PUNCT', 'np_function': '__unknown__'}, "
-    +               "{'lemma': '__unknown__', 'upostag': '__unknown__', 'np_function': '__unknown__'}"
+    +               "{'lemma': ',', 'upos': 'PUNCT', 'np_function': '__unknown__'}, "
+    +               "{'lemma': '__unknown__', 'upos': '__unknown__', 'np_function': '__unknown__'}"
     +               "]"
     +           "], "
-    +       "{'lemma': '.', 'upostag': 'PUNCT', 'np_function': '__unknown__'}"
+    +       "{'lemma': '.', 'upos': 'PUNCT', 'np_function': '__unknown__'}"
     +       "]",
 }
 
@@ -436,7 +436,7 @@ def test_extract_vocabulary():
 
         outfile = "example_data_dict.json"
 
-        os.system(script_file + " " + infile_path + " " + outfile + " lemma upostag np_function")
+        os.system(script_file + " " + infile_path + " " + outfile + " lemma upos np_function")
 
         expected_dict = json.load(open(expected_outfile_path, 'r'))
         result_dict = json.load(open(outfile, 'r'))
@@ -517,7 +517,7 @@ def test_encode_corpus():
 
         outfile = "example_data_encoded.conllu"
 
-        os.system(script_file + " " + infile_path + " " + outfile + " " + encoded_dict_path + " lemma upostag np_function --unknown \"__unknown__\"")
+        os.system(script_file + " " + infile_path + " " + outfile + " " + encoded_dict_path + " lemma upos np_function --unknown \"__unknown__\"")
 
 
         assert filecmp.cmp(outfile, expected_outfile_path, shallow=False)
