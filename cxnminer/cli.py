@@ -9,6 +9,8 @@ import logging
 import logging.config
 import math
 import multiprocessing
+import os
+import os.path
 import pickle
 
 import click
@@ -57,6 +59,29 @@ def main(ctx, logging_config):
     logger = logging.getLogger(__name__)
 
     ctx.obj['logger'] = logger
+
+@main.command()
+@click.pass_context
+@click.argument('infile')
+@click.argument('outdir')
+@click.option('--example_ids')
+def corpus2sentences(ctx, infile, outdir, example_ids):
+
+
+    try:
+        os.mkdir(outdir)
+    except OSError:
+        print ("Creation of the directory %s failed" % outdir)
+
+    if example_ids is not None:
+        example_ids = set(json.load(open_file(example_ids)))
+
+    with open_file(infile) as corpusfile:
+
+        for sent_id, sentence in enumerate(conllu.parse_incr(corpusfile)):
+             print(sent_id)
+             if example_ids is None or sent_id in example_ids:
+                 print(" ".join([token['form'] for token in sentence]), file=open(os.path.join(outdir, str(sent_id)), 'w'))
 
 
 def conversion_function(tree, tags):
@@ -584,8 +609,8 @@ def get_top_n(ctx, patterns_file, pattern_stats, stat, n, outfile):
 @click.argument('base_patterns_file')
 @click.argument('n', type=int)
 @click.argument('outfile')
-@click.option('--corpus')
-def get_top_n_base_patterns(ctx, patterns_file, base_patterns_file, n, outfile, corpus):
+@click.option('--example_ids')
+def get_top_n_base_patterns(ctx, patterns_file, base_patterns_file, n, outfile, example_ids):
 
     with open_file(base_patterns_file) as infile:
 
@@ -595,6 +620,7 @@ def get_top_n_base_patterns(ctx, patterns_file, base_patterns_file, n, outfile, 
             pattern, sentences = json.loads(line)
             base_patterns[pattern] = len(sentences)
 
+    bp_example_ids = set()
     with open_file(patterns_file) as infile:
         with open_file(outfile, 'w') as o:
 
@@ -606,40 +632,34 @@ def get_top_n_base_patterns(ctx, patterns_file, base_patterns_file, n, outfile, 
                 if len(bp) > n:
                     bp = sorted(bp, key=lambda pattern: base_patterns[pattern], reverse=True)[:n]
 
-                if corpus:
+                bp_set = set(bp)
+                bp_with_examples = []
+                with open_file(base_patterns_file) as basefile:
 
-                    bp_set = set(bp)
-                    bp_example_id = {}
-                    with open_file(base_patterns_file) as basefile:
+                    for baseline in basefile:
+                        bpattern, sentences = json.loads(baseline)
+                        if bpattern in bp_set:
+                            # I have added 1 to the id
+                            examples = [sentence - 1 for sentence in sentences]
+                            bp_with_examples.append((bpattern, examples))
+                            bp_example_ids.update(set(examples))
 
-                        for baseline in basefile:
-                            bpattern, sentences = json.loads(baseline)
-                            if bpattern in bp_set:
-                                # I have added 1 to the id
-                                bp_example_id[bpattern] = sorted(sentences)[0] - 1
-
-                                ## stop sanning base pattern file if I have all base patterns
-                                bp_set.remove(bpattern)
-                                if not bp_set:
-                                    break
+                            ## stop sanning base pattern file if I have all base patterns
+                            bp_set.remove(bpattern)
+                            if not bp_set:
+                                break
 
 
-                    bp_with_examples = []
-                    for base_pattern in bp:
-
-                        with open_file(corpus) as corpusfile:
-
-                            for sent_id, sentence in enumerate(conllu.parse_incr(corpusfile)):
-                                if sent_id == bp_example_id[base_pattern]:
-                                    bp_with_examples.append((base_pattern, " ".join([token['form'] for token in sentence])))
-                                    break
-
-                    bp = bp_with_examples
+                bp = bp_with_examples
 
                 content['base_patterns'] = bp
 
                 json.dump([pattern, content], o)
                 o.write("\n")
+
+        if example_ids is not None:
+            with open_file(example_ids, 'w') as o:
+                json.dump(list(bp_example_ids), o)
 
 
 @utils.command()
@@ -672,7 +692,12 @@ def decode_pattern_collection(ctx, infile, encoder, outfile, string, unknown):
                 for base_pattern in base_patterns:
 
                     try:
-                        decoded_pattern = pattern_encoder.decode(base_pattern[0])
+                        examples = []
+                        if len(base_pattern) == 2:
+                            examples = base_pattern[1]
+                            base_pattern = base_pattern[0]
+
+                        decoded_pattern = pattern_encoder.decode(base_pattern)
 
                         if unknown is None or all([element != unknown for element in decoded_pattern.get_element_list()]):
                             if string:
@@ -680,7 +705,7 @@ def decode_pattern_collection(ctx, infile, encoder, outfile, string, unknown):
                             else:
                                 cout_pattern = base64.b64encode(pickle.dumps(decoded_pattern)).decode('ascii')
 
-                            decoded_base_patterns.append([cout_pattern, base_pattern[1]])
+                            decoded_base_patterns.append([cout_pattern, examples])
                     except:
                         ctx.obj['logger'].warning("Could not test pattern for unknown, skipping.")
 
