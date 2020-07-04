@@ -394,6 +394,8 @@ def get_stats(line, decoded_patterns, known_stats, base_patterns, base_level, pa
 
     if decoded_pattern is not None:
 
+        stats['length'] = decoded_pattern.length
+
         if base_level is not None:
 
             base_elements = 0
