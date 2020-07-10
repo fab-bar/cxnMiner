@@ -17,7 +17,7 @@ import click
 import conllu
 
 from cxnminer.extractor import SyntacticNGramExtractor
-from cxnminer.pattern import SNGram
+from cxnminer.pattern import SNGram, PatternElement
 from cxnminer.pattern_encoder import PatternEncoder, Base64Encoder, HuffmanEncoder
 from cxnminer.utils.helpers import open_file
 
@@ -142,7 +142,6 @@ def pattern_extraction(sentence_tuple, extractor, word_level, token_start, token
 
         base_pattern_encoded = None
 
-
         if keep_only_word is None or any([getattr(element, "get", lambda x, y: None)(word_level, None) == keep_only_word for element in tpattern.get_full_pattern().get_element_list()]):
             for pattern in tpattern.get_pattern_list(frozenset(['lemma', 'upos', 'np_function'])):
 
@@ -159,14 +158,13 @@ def pattern_extraction(sentence_tuple, extractor, word_level, token_start, token
 
 
         if this_pattern_list:
-            base_pattern_positions = ",".join(
-                [str(element) for element in tpattern.get_base_pattern('id').get_element_list()])
+            base_pattern_positions = [int(str(element)) for element in tpattern.get_base_pattern('id').get_element_list() if isinstance(element, PatternElement)]
             sentence_base_patterns[base_pattern_encoded].append(base_pattern_positions)
             pattern_list.extend(this_pattern_list)
 
     for encoded_base_pattern, positions in sentence_base_patterns.items():
-        for _, _ in itertools.groupby(sorted(positions)):
-            pattern_list.append((True, encoded_base_pattern, sentence_nr + 1))
+        for key, _ in itertools.groupby(sorted(positions, key=lambda x: ",".join(str(x)))):
+            pattern_list.append((True, encoded_base_pattern, [sentence_nr + 1, key]))
 
     return pattern_list
 
@@ -243,7 +241,7 @@ def extract_patterns(ctx, infile, outfile_patterns, outfile_base, encoded_dictio
                             if not only_base:
                                 print("\t".join([pattern, str(content)]), file=outfile_patterns)
                         else:
-                            print("\t".join([pattern, str(content)]), file=outfile_base)
+                            print("\t".join([pattern, json.dumps(content)]), file=outfile_base)
 
 
 @main.group()
@@ -255,10 +253,9 @@ def utils(ctx):
 @utils.command()
 @click.argument('infile')
 @click.argument('outfile')
-@click.option('--is_int', is_flag=True)
 @click.option('--remove_hapax', is_flag=True)
 @click.pass_context
-def convert_pattern_list(ctx, infile, outfile, is_int, remove_hapax):
+def convert_pattern_list(ctx, infile, outfile, remove_hapax):
 
     def write_pattern(pattern, contents, outfile):
         json.dump((pattern, contents), outfile)
@@ -272,8 +269,6 @@ def convert_pattern_list(ctx, infile, outfile, is_int, remove_hapax):
 
             for line in infile:
                 pattern, content = line.rstrip().split("\t")
-                if is_int:
-                    content = int(content)
 
                 if pattern != current_pattern:
 
@@ -641,10 +636,12 @@ def get_top_n_base_patterns(ctx, patterns_file, base_patterns_file, n, outfile, 
                     for baseline in basefile:
                         bpattern, sentences = json.loads(baseline)
                         if bpattern in bp_set:
+                            examples = [json.loads(sentence) for sentence in sentences]
                             # I have added 1 to the id
-                            examples = [sentence - 1 for sentence in sentences]
+                            for example in examples:
+                                example[0] = example[0] - 1
                             bp_with_examples.append((bpattern, examples))
-                            bp_example_ids.update(set(examples))
+                            bp_example_ids.update(set([sentence[0] for sentence in examples]))
 
                             ## stop sanning base pattern file if I have all base patterns
                             bp_set.remove(bpattern)

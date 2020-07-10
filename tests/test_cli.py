@@ -268,25 +268,25 @@ expected_patterns_with_phrase = {
 }
 
 expected_basepatterns_without_phrase_without_unknown = {
-    basepatterns_with_tokens["fox [the, quick, brown]"]: [1],
-    basepatterns_with_tokens["dog [over, the, lazy]"]: [1,2,3],
-    basepatterns_with_tokens["__unknown__ [__unknown__, the, __unknown__]"]: [3],
-    basepatterns_with_tokens["__unknown__,"]: [4,4]
+    basepatterns_with_tokens["fox [the, quick, brown]"]: ['[1, [4, 1, 2, 3]]'],
+    basepatterns_with_tokens["dog [over, the, lazy]"]: ['[1, [9, 6, 7, 8]]','[2, [6, 3, 4, 5]]','[3, [13, 10, 11, 12]]'],
+    basepatterns_with_tokens["__unknown__ [__unknown__, the, __unknown__]"]: ['[3, [8, 5, 6, 7]]'],
+    basepatterns_with_tokens["__unknown__,"]: ['[4, [5, 4]]','[4, [7, 6]]']
 }
 
 expected_basepatterns_without_phrase = {
     **expected_basepatterns_without_phrase_without_unknown,
     **{
-        basepatterns_with_tokens["__unknown__ [,, __unknown__]"]: [4],
+        basepatterns_with_tokens["__unknown__ [,, __unknown__]"]: ['[4, [10, 8, 9]]'],
     }
 }
 
 expected_basepatterns_with_phrase = {
-    basepatterns_with_tokens["jump [fox [the, quick, brown], dog [over, the, lazy], .]"]: [1],
-    basepatterns_with_tokens["jump [fox, dog [over, the, lazy], .]"]: [2],
-    basepatterns_with_tokens["jump [fox [the, quick, brown, __unknown__ [__unknown__, the, __unknown__]], dog [over, the, lazy], .]"]: [3],
-    basepatterns_with_tokens["__unknown__ [__unknown__, __unknown__ [__unknown__,, __unknown__,, __unknown__ [,, __unknown__]], .]"]: [4],
-    basepatterns_with_tokens["__unknown__ [__unknown__,, __unknown__,, __unknown__ [,, __unknown__]]"]: [4]
+    basepatterns_with_tokens["jump [fox [the, quick, brown], dog [over, the, lazy], .]"]: ['[1, [5, 4, 1, 2, 3, 9, 6, 7, 8, 10]]'],
+    basepatterns_with_tokens["jump [fox, dog [over, the, lazy], .]"]: ['[2, [2, 1, 6, 3, 4, 5, 7]]'],
+    basepatterns_with_tokens["jump [fox [the, quick, brown, __unknown__ [__unknown__, the, __unknown__]], dog [over, the, lazy], .]"]: ['[3, [9, 4, 1, 2, 3, 8, 5, 6, 7, 13, 10, 11, 12, 14]]'],
+    basepatterns_with_tokens["__unknown__ [__unknown__, __unknown__ [__unknown__,, __unknown__,, __unknown__ [,, __unknown__]], .]"]: ['[4, [2, 1, 3, 5, 4, 7, 6, 10, 8, 9, 11]]'],
+    basepatterns_with_tokens["__unknown__ [__unknown__,, __unknown__,, __unknown__ [,, __unknown__]]"]: ['[4, [3, 5, 4, 7, 6, 10, 8, 9]]']
 }
 
 @pytest.mark.parametrize("parameters,expected_patterns,expected_basepatterns", [
@@ -344,7 +344,6 @@ def test_extract_patterns_with_phrases(parameters, expected_patterns, expected_b
         runner.invoke(main, [
             'utils',
             'convert-pattern-list',
-            '--is_int',
             base_list_filename,
             base_filename
         ])
