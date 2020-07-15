@@ -18,6 +18,7 @@ import conllu
 
 from cxnminer.extractor import SyntacticNGramExtractor
 from cxnminer.pattern import SNGram, PatternElement
+from cxnminer.pattern_collection import PatternCollection
 from cxnminer.pattern_encoder import PatternEncoder, Base64Encoder, HuffmanEncoder
 from cxnminer.utils.helpers import open_file
 
@@ -713,4 +714,14 @@ def decode_pattern_collection(ctx, infile, encoder, outfile, string, unknown):
 
                 json.dump((out_pattern, content), o)
                 o.write("\n")
+
+
+@utils.command()
+@click.pass_context
+@click.argument('pattern_file')
+def get_schematization_relation(ctx, pattern_file):
+
+    pattern_set = PatternCollection(pattern_file)
+    pattern_set.loadSchematisationRelation()
+    pattern_set.save()
 
