@@ -170,6 +170,8 @@ outfile
   If this flag is set, the encoder will not handle unknown items but throw an error.
   Otherwise "__unknown__" is used for unknown items.
 
+.. _encode-dictionary:
+
 Encode dictionary
 ~~~~~~~~~~~~~~~~~
 
@@ -208,6 +210,8 @@ encoder
 
 --loging_config
   See above.
+
+.. _encode-corpus:
 
 Encode corpus
 ~~~~~~~~~~~~~

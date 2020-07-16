@@ -6,6 +6,7 @@
    :caption: For users
 
    utils
+   extraction
 
 .. toctree::
    :maxdepth: 1

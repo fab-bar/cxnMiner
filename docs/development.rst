@@ -7,6 +7,27 @@ have pyenv installed and activated, pyenv will make the necessary python
 versions available as they are listed in `.python_version`. The version listed
 first is the one that has been used during development.
 
+If you simply want to create a virtual environment for the Python version installed
+on your sytem (supported are python 3.6, 3.7 and 3.8), run the following command:
+
+.. code-block:: bash
+
+   python -m venv .venv
+
+
+.. note::
+
+   If you don't have `pip` installed on your sytem, the command above might fail.
+   In this case try:
+
+   .. code-block:: bash
+
+      python -m venv --without-pip .venv
+      curl https://bootstrap.pypa.io/get-pip.py | python
+
+To activate the virtual environment run `source .venv/bin/activate`, to deactive
+it again run `deactivate`.
+
 All the dependencies that are used for the experiments and during development
 are contained in `requirements-dev.txt` which is managed with the help of
 `pip-tools <https://github.com/jazzband/pip-tools>`_).
