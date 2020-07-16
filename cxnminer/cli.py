@@ -82,7 +82,7 @@ def corpus2sentences(ctx, infile, outdir, example_ids):
         for sent_id, sentence in enumerate(conllu.parse_incr(corpusfile)):
              print(sent_id)
              if example_ids is None or sent_id in example_ids:
-                 print(" ".join([token['form'] for token in sentence]), file=open(os.path.join(outdir, str(sent_id)), 'w'))
+                 print(sentence.serialize(), file=open(os.path.join(outdir, str(sent_id)), 'w'))
 
 
 def conversion_function(tree, tags):
