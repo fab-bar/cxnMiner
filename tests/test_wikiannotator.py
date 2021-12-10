@@ -1,16 +1,16 @@
 from unittest.mock import patch
 
 import pytest
-from pytest_cases import case_tags, cases_data, THIS_MODULE
+from pytest_cases import case, get_case_tags, parametrize_with_cases, THIS_MODULE
 
 import conllu
-from spacy.tests.util import get_doc
 from spacy.vocab import Vocab
+from spacy.tokens import Doc
 
 from cxnminer.utils import wikiannotator
 
 
-@case_tags('dev')
+@case(tags=['dev'])
 def case_spacy_german():
 
     data = """
@@ -57,16 +57,13 @@ def case_spacy(spacy_load_mock):
     words = ["Dies", "ist", "ein", "Test", "."]
     vocab = Vocab(strings=words)
 
-    lemma_table = vocab.lookups.add_table("lemma_lookup")
-    lemma_table["ist"] = "sein"
-    lemma_table["ein"] = "einen"
-
-    heads = [1, 0, 1, -2, -3]
+    heads = [1, 1, 3, 1, 1]
     tags = ["PDS", "VAFIN", "ART", "NN", "$."]
     pos = ["PRON", "AUX", "DET", "NOUN", "PUNCT"]
+    lemmas = ["Dies", "sein", "einen", "Test", "."]
     deps = ["sb", "ROOT", "nk", "pd", "punct"]
 
-    doc = get_doc(vocab, words, pos=pos, tags=tags, deps=deps, heads=heads)
+    doc = Doc(vocab, words, pos=pos, tags=tags, lemmas=lemmas, deps=deps, heads=heads)
 
     spacy_annotator = spacy_load_mock.return_value
     spacy_annotator.return_value = doc
@@ -85,8 +82,8 @@ def case_spacy(spacy_load_mock):
 
 
 ## cases tagged with 'dev' need specific packages - test for availability
-def language_model_filter(tags):
-    if 'dev' in tags:
+def language_model_filter(case):
+    if 'dev' in get_case_tags(case):
         try:
             import de_core_news_sm
             return True
@@ -95,10 +92,8 @@ def language_model_filter(tags):
     else:
         return True
 
-@cases_data(module=THIS_MODULE, filter=language_model_filter)
-def test_factory(case_data):
-
-    annotator, expected_class, _ = case_data.get()
+@parametrize_with_cases("annotator,expected_class,test_data", cases=THIS_MODULE, filter=language_model_filter)
+def test_factory(annotator, expected_class, test_data):
 
     assert isinstance(annotator, expected_class)
 
@@ -109,10 +104,8 @@ def test_factory_not_implemented():
         wikiannotator.Annotator.createAnnotator('not_implemented', {})
 
 
-@cases_data(module=THIS_MODULE, filter=language_model_filter)
-def test_annotate_text(case_data):
-
-    annotator, _, test_data = case_data.get()
+@parametrize_with_cases("annotator,expected_class,test_data", cases=THIS_MODULE, filter=language_model_filter)
+def test_annotate_text(annotator, expected_class, test_data):
 
     result = annotator.annotate_text(test_data['text'], test_data['textname'], lambda x: False)
 
@@ -123,10 +116,8 @@ def test_annotate_text(case_data):
 
 
 
-@cases_data(module=THIS_MODULE, filter=language_model_filter)
-def test_annotate_text_filter(case_data):
-
-    annotator, _, _ = case_data.get()
+@parametrize_with_cases("annotator,expected_class,test_data", cases=THIS_MODULE, filter=language_model_filter)
+def test_annotate_text_filter(annotator, expected_class, test_data):
 
     result = annotator.annotate_text("Some text. Does not matter.", "The name", lambda x: True)
 

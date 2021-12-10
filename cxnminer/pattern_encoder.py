@@ -376,7 +376,7 @@ class HuffmanEncoder(CombinablePatternEncoder):
     @classmethod
     def _bytes_2_bitarray(cls, bytes_):
 
-        return bitarray.util.int2ba(cls._bytes_2_int(bytes_))[cls.prefix.length():]
+        return bitarray.util.int2ba(cls._bytes_2_int(bytes_))[len(cls.prefix):]
 
     @classmethod
     def _bitarray_2_bytes(cls, bitarray_):

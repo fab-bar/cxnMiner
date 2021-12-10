@@ -13,7 +13,7 @@ setup(
     install_requires=[
         'click',
         'bitarray',
-        'conllu',
+        'conllu<4.0', # with 4.0 pickling TokenList does not work
         'spacy'
     ],
     entry_points={

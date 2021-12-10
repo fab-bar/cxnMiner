@@ -1,7 +1,7 @@
 import functools
 
 import pytest
-from pytest_cases import cases_generator, cases_data, THIS_MODULE
+from pytest_cases import parametrize, parametrize_with_cases, THIS_MODULE
 
 import conllu
 
@@ -469,7 +469,7 @@ def conversion_function(tree):
     else:
         return None
 
-@cases_generator("sentence={sentence.metadata[text]} min={min_max[0]}, max={min_max[1]}, conversion={conversion}",
+@parametrize(idgen="sentence={sentence.metadata[text]} min={min_max[0]}, max={min_max[1]}, conversion={conversion}",
                  sentence=test_sentences,
                  min_max=[(1,3), (2,3), (2,4), (2,9), (2,10)],
                  conversion=[None, conversion_function],
@@ -483,34 +483,29 @@ def case_simple_generator(sentence, min_max, conversion):
         test_data[sentence.metadata['text']]["_".join([str(min_max[0]), str(min_max[1]), getattr(conversion, '__name__', 'None')])]
     )
 
-@cases_data(module=THIS_MODULE)
-def test_extract_ngrams_numbers(case_data):
+@parametrize_with_cases("sentence,extractor,expected", cases=THIS_MODULE)
+def test_extract_ngrams_numbers(sentence, extractor, expected):
 
-    sentence, extractor, expected = case_data.get()
     assert len([str(pattern.get_pattern_list(['form', 'function'])[0]) for pattern in extractor.extract_patterns(sentence)]) == expected['number']
 
+@parametrize_with_cases("sentence,extractor,expected", cases=THIS_MODULE)
+def test_extract_ngrams_elements(sentence, extractor, expected):
 
-@cases_data(module=THIS_MODULE)
-def test_extract_ngrams_elements(case_data):
-
-    sentence, extractor, expected = case_data.get()
     assert set([str(pattern.get_pattern_list(['form', 'function'])[0]) for pattern in extractor.extract_patterns(sentence)]) == expected['ngrams']
 
 
-@cases_data(module=THIS_MODULE)
-def test_extracting_storing_all_paths(case_data):
+@parametrize_with_cases("sentence,extractor,expected", cases=THIS_MODULE)
+def test_extracting_storing_all_paths(sentence, extractor, expected):
 
-    sentence, extractor, expected = case_data.get()
     extractor = SyntacticNGramExtractor(
         min_size=extractor.min_size, max_size=extractor.max_size, special_node_conversion=extractor.special_node_conversion, max_open_path_size=None, max_open_path_number=None)
     assert len([str(pattern.get_pattern_list(['form', 'function'])[0]) for pattern in extractor.extract_patterns(sentence)]) == expected['number']
 
-@cases_data(module=THIS_MODULE)
-def test_max_open_paths(case_data):
+@parametrize_with_cases("sentence,extractor,expected", cases=THIS_MODULE)
+def test_max_open_paths(sentence, extractor, expected):
 
     ## extract while only allowing one open path
 
-    sentence, extractor, expected = case_data.get()
     extractor = SyntacticNGramExtractor(
         min_size=extractor.min_size, max_size=extractor.max_size, special_node_conversion=extractor.special_node_conversion, max_open_path_number=1)
     assert extractor.extract_patterns(sentence) == []

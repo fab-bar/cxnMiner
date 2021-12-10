@@ -1,5 +1,5 @@
 import pytest
-from pytest_cases import cases_data, THIS_MODULE
+from pytest_cases import parametrize_with_cases, THIS_MODULE
 
 import conllu
 
@@ -295,51 +295,39 @@ def case_apples():
         "profiles": set(["form [ form form , form form , form [ form , form ] ]"])
     }
 
-@cases_data(module=THIS_MODULE)
-def test_sngram_length(case_data):
-
-    sngram, expected = case_data.get()
+@parametrize_with_cases("sngram,expected", cases=THIS_MODULE)
+def test_sngram_length(sngram, expected):
 
     assert sngram.length == expected['length']
 
-@cases_data(module=THIS_MODULE)
-def test_sngram_str(case_data):
-
-    sngram, expected = case_data.get()
+@parametrize_with_cases("sngram,expected", cases=THIS_MODULE)
+def test_sngram_str(sngram, expected):
 
     assert str(sngram.get_pattern_list(['form'])[0]) == expected['str']
 
-@cases_data(module=THIS_MODULE)
-def test_sngram_element_list(case_data):
-
-    sngram, expected = case_data.get()
+@parametrize_with_cases("sngram,expected", cases=THIS_MODULE)
+def test_sngram_element_list(sngram, expected):
 
     assert sngram.get_pattern_list(['form'])[0].get_element_list() == expected['repr']
 
-@cases_data(module=THIS_MODULE)
-def test_sngram_from_element_list(case_data):
-
-    sngram, expected = case_data.get()
+@parametrize_with_cases("sngram,expected", cases=THIS_MODULE)
+def test_sngram_from_element_list(sngram, expected):
 
     assert sngram.get_pattern_list(['form'])[0] == SNGram.from_element_list(expected['repr'],
                                                                             left_bracket=sngram.LEFT_BRACKET,
                                                                             right_bracket=sngram.RIGHT_BRACKET,
                                                                             comma=sngram.COMMA)
 
-@cases_data(module=THIS_MODULE)
+@parametrize_with_cases("sngram,expected", cases=THIS_MODULE)
 @pytest.mark.parametrize("features", [(['form', 'upostag'])])
-def test_tsngram_pattern_list(case_data, features):
-
-    sngram, expected = case_data.get()
+def test_tsngram_pattern_list(sngram, expected, features):
 
     assert len(sngram.get_pattern_list(features)) == len(features)**sngram.length
 
 
-@cases_data(module=THIS_MODULE)
+@parametrize_with_cases("sngram,expected", cases=THIS_MODULE)
 @pytest.mark.parametrize("feature", ['form'])
-def test_tsngram_pattern_list(case_data, feature):
-
-    sngram, expected = case_data.get()
+def test_tsngram_pattern_list(sngram, expected, feature):
 
     assert sngram.get_base_pattern(feature).get_element_list() == expected.get(
         'repr_full',
@@ -347,19 +335,15 @@ def test_tsngram_pattern_list(case_data, feature):
     )
 
 
-@cases_data(module=THIS_MODULE)
-def test_tsngram_get_pattern_profile(case_data):
-
-    sngram, _ = case_data.get()
+@parametrize_with_cases("sngram,expected", cases=THIS_MODULE)
+def test_tsngram_get_pattern_profile(sngram, expected):
 
     with pytest.raises(TypeError):
         sngram.get_pattern_profile()
 
 
-@cases_data(module=THIS_MODULE)
-def test_sngram_get_pattern_profile(case_data):
-
-    sngram, expected = case_data.get()
+@parametrize_with_cases("sngram,expected", cases=THIS_MODULE)
+def test_sngram_get_pattern_profile(sngram, expected):
 
     for pattern in sngram.get_pattern_list(['form']):
 
