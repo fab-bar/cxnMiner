@@ -5,7 +5,7 @@ Data preparation
 `CoNNL-U format <https://universaldependencies.org/format.html>`_ as input.
 
 Download and annotate Wikipedia dumps
--------------------
+-------------------------------------
 
 *cxnMiner* uses an annotated corpus to automatically identify constructions.
 One example for a text collection that can be used is Wikipedia.
@@ -87,8 +87,8 @@ Extract a dictionary of possible pattern elements to create an encoder.
 
 .. code-block:: bash
 
-  bin/extract_vocabulary infile outfile lemma upostag
-  bin/extract_vocabulary example_data/example_data.conllu example_data/example_data_dict.json lemma upostag np_function
+  bin/extract_vocabulary infile outfile lemma upos
+  bin/extract_vocabulary example_data/example_data.conllu example_data/example_data_dict.json lemma upos np_function
 
 Options
 +++++++
@@ -109,12 +109,12 @@ levels
      the plain form of the token
    lemma
      the lemma
-   upostag
+   upos
      the universal part-of-speech tag
-   xpostag
+   xpos
      the language specific part-of-speech tag
    np_function
-     the dependency relation for tokens with the `upostag` `NOUN`
+     the dependency relation for tokens with the `upos` `NOUN`
 
 --drop_frequencies
   The list can contain the frequencies (needed to create a `Huffman encoder`) or they can optionally be dropped.
@@ -181,7 +181,7 @@ to encode the corpus using lookup.
 .. code-block:: bash
 
   bin/encode_vocabulary vocabulary outfile encoder
-  bin/encode_vocabulary example_data/example_data_dict_filtered.json example_data/example_data_dict_filtered_encoded.json example_data/example_data_encoder --add_special --add_unknown
+  bin/encode_vocabulary example_data/example_data_dict_filtered.json example_data/example_data_dict_filtered_encoded.json example_data/example_data_encoder --add_special --unknown __unknown__
 
 Options
 +++++++
@@ -205,8 +205,8 @@ encoder
 --add_special
   Encode the special elements of the pattern type as well.
 
---add_unknown
-  Encode the unknown element. Added to the dict with the key '__unknown'.
+--unknown
+  Represent unknown elements with the given string.
 
 --loging_config
   See above.
@@ -221,8 +221,8 @@ Uses an encoded dicitionary to efficiently encode the corpus.
 
 .. code-block:: bash
 
-  bin/encode_corpus infile outfile dictionary lemma upostag
-  bin/encode_corpus example_data/example_data.conllu example_data/example_data_encoded.conllu example_data/example_data_dict_filtered_encoded.json lemma upostag np_function --encoder_file example_data/example_data_encoder
+  bin/encode_corpus infile outfile dictionary lemma upos
+  bin/encode_corpus example_data/example_data.conllu example_data/example_data_encoded.conllu example_data/example_data_dict_filtered_encoded.json lemma upos np_function --unknown __unknown__
 
 Options
 +++++++
@@ -242,8 +242,8 @@ dictionary
 levels
   The levels to be encoded -- see above.
 
---encoder_file
-  If an encoder is given, its value for unknown is used for tokens not in the dictionary.
+--unknown
+  The value given for this option is used for unknown tokens.
   
 --processes
   Controls the number of processes to be used.

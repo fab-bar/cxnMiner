@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'cxnMiner'
-copyright = '2020, Fabian Barteld'
+copyright = '2020-2021, Fabian Barteld'
 author = 'Fabian Barteld'
 
 
@@ -28,7 +28,7 @@ author = 'Fabian Barteld'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'recommonmark',
+    'm2r2',
 ]
 
 # The master toctree document.
@@ -63,23 +63,3 @@ latex_documents = [
      'Fabian Barteld', 'manual'),
 ]
 
-# fixes issue with m2r and sphinx 3: https://github.com/sphinx-doc/sphinx/issues/7420
-# https://github.com/rtfd/recommonmark/blob/master/docs/conf.py
-from m2r import MdInclude
-from recommonmark.transform import AutoStructify
-
-def setup(app):
-    config = {
-        # 'url_resolver': lambda url: github_doc_root + url,
-        'auto_toc_tree_section': 'Contents',
-        'enable_eval_rst': True,
-    }
-    app.add_config_value('recommonmark_config', config, True)
-    app.add_transform(AutoStructify)
-
-    # from m2r to make `mdinclude` work
-    app.add_config_value('no_underscore_emphasis', False, 'env')
-    app.add_config_value('m2r_parse_relative_links', False, 'env')
-    app.add_config_value('m2r_anonymous_references', False, 'env')
-    app.add_config_value('m2r_disable_inline_math', False, 'env')
-    app.add_directive('mdinclude', MdInclude)

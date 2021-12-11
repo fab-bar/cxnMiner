@@ -8,7 +8,7 @@ versions available as they are listed in `.python_version`. The version listed
 first is the one that has been used during development.
 
 If you simply want to create a virtual environment for the Python version installed
-on your sytem (supported are python 3.6, 3.7 and 3.8), run the following command:
+on your sytem (supported are python 3.7, 3.8, 3.9 and 3.10), run the following command:
 
 .. code-block:: bash
 
@@ -89,7 +89,7 @@ Tests
 
 Tests are run using `pytest <https://docs.pytest.org>`_ with `tox
 <https://tox.readthedocs.io/>`_ handling tests for multiple python versions
-(3.6, 3.7 and 3.8). The requirements that are used when running the tests,
+(3.7, 3.8, 3.9 and 3.10). The requirements that are used when running the tests,
 are given in requirements-test.txt which is managed with the help of pip-tools
 as well.
 
