@@ -8,7 +8,6 @@ import json
 import logging
 import logging.config
 import math
-import multiprocessing
 import os
 import os.path
 import pickle
@@ -20,7 +19,7 @@ from cxnminer.extractor import SyntacticNGramExtractor
 from cxnminer.pattern import SNGram, PatternElement
 from cxnminer.pattern_collection import PatternCollection
 from cxnminer.pattern_encoder import PatternEncoder, Base64Encoder, HuffmanEncoder
-from cxnminer.utils.helpers import open_file
+from cxnminer.utils.helpers import open_file, MultiprocessMap
 
 @click.group()
 @click.pass_context
@@ -554,13 +553,13 @@ def decode_patterns(ctx, infile, encoder, outfile, processes):
     with open_file(infile) as infile:
         with open_file(outfile, 'wb') as o:
 
-            with multiprocessing.Pool(processes) as p:
+            with MultiprocessMap(processes, chunksize=1000) as m:
 
-                for pattern, decoded_pattern in p.imap(
+                for pattern, decoded_pattern in m(
                         functools.partial(decode_pattern,
                                           pattern_encoder=pattern_encoder
                         ),
-                        infile, chunksize=1000):
+                        infile):
 
                     ctx.obj['logger'].info("Pattern")
                     pickle.dump((pattern, decoded_pattern), o)
