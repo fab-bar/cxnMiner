@@ -21,6 +21,7 @@ class PatternExtractor(metaclass=abc.ABCMeta):
 class SyntacticNGramExtractor(PatternExtractor):
     """Extracts non-continous sn-grams from a given sentence that are bottom-up subtrees."""
 
+    name = 'sngram'
 
     @classmethod
     def get_pattern_type(cls):

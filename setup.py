@@ -14,6 +14,7 @@ setup(
         'click',
         'bitarray',
         'conllu<4.0', # with 4.0 pickling TokenList does not work
+        'factory-manager',
         'spacy'
     ],
     entry_points={

@@ -290,15 +290,15 @@ expected_basepatterns_with_phrase = {
 }
 
 @pytest.mark.parametrize("parameters,expected_patterns,expected_basepatterns", [
-    ([], expected_patterns_without_phrase, expected_basepatterns_without_phrase),
+    ([os.path.abspath('example_data/test_config_nophrase.json')], expected_patterns_without_phrase, expected_basepatterns_without_phrase),
     (
-        ["NOUN"],
+        [os.path.abspath('example_data/test_config.json')],
         {**expected_patterns_without_phrase, **expected_patterns_with_phrase},
         {**expected_basepatterns_without_phrase, **expected_basepatterns_with_phrase}
     ),
-    (["--skip_unknown"], expected_patterns_without_phrase_and_unknown, expected_basepatterns_without_phrase_without_unknown),
-    (["--keep_only_dict_words"], expected_patterns_without_phrase, expected_basepatterns_without_phrase),
-    (["--keep_only_dict_words", "--skip_unknown"], expected_patterns_without_phrase_and_unknown, expected_basepatterns_without_phrase_without_unknown)
+    ([os.path.abspath('example_data/test_config_nophrase.json'), "--skip_unknown"], expected_patterns_without_phrase_and_unknown, expected_basepatterns_without_phrase_without_unknown),
+    ([os.path.abspath('example_data/test_config_nophrase.json'), "--keep_only_dict_words"], expected_patterns_without_phrase, expected_basepatterns_without_phrase),
+    ([os.path.abspath('example_data/test_config_nophrase.json'), "--keep_only_dict_words", "--skip_unknown"], expected_patterns_without_phrase_and_unknown, expected_basepatterns_without_phrase_without_unknown)
 ])
 def test_extract_patterns_with_phrases(parameters, expected_patterns, expected_basepatterns):
 
@@ -321,8 +321,7 @@ def test_extract_patterns_with_phrases(parameters, expected_patterns, expected_b
             infile_path,
             patterns_list_filename,
             base_list_filename,
-            dictfile_path,
-            'lemma'] + parameters
+            dictfile_path] + parameters
         )
 
         # files need to be sorted
@@ -428,6 +427,7 @@ def test_extract_vocabulary():
 
     infile_path = os.path.abspath('example_data/example_data.conllu')
     expected_outfile_path = os.path.abspath('example_data/example_data_dict.json')
+    configfile_path = os.path.abspath('example_data/example_config.json')
     script_file = os.path.abspath('bin/extract_vocabulary')
 
     runner = CliRunner()
@@ -435,7 +435,7 @@ def test_extract_vocabulary():
 
         outfile = "example_data_dict.json"
 
-        os.system(script_file + " " + infile_path + " " + outfile + " lemma upos np_function")
+        os.system(script_file + " " + infile_path + " " + outfile + " " + configfile_path)
 
         expected_dict = json.load(open(expected_outfile_path, 'r'))
         result_dict = json.load(open(outfile, 'r'))
@@ -463,6 +463,7 @@ def test_filter_vocabulary():
 def test_create_encoder():
 
     infile_path = os.path.abspath('example_data/example_data_dict_filtered.json')
+    configfile_path = os.path.abspath('example_data/example_config.json')
     script_file = os.path.abspath('bin/create_encoder')
 
     runner = CliRunner()
@@ -470,7 +471,7 @@ def test_create_encoder():
 
         outfile = "example_data_encoder"
 
-        exit_status = os.system(script_file + " " + infile_path + " " + outfile)
+        exit_status = os.system(script_file + " " + infile_path + " " + outfile + " " + configfile_path)
 
         encoder = Base64Encoder(PatternEncoder.load(open(outfile, 'rb')))
         dict_ = json.load(open(infile_path, 'r'))
@@ -486,6 +487,7 @@ def test_encode_vocabulary():
 
     infile_path = os.path.abspath('example_data/example_data_dict_filtered.json')
     encoder_path = os.path.abspath('example_data/example_data_encoder')
+    configfile_path = os.path.abspath('example_data/example_config.json')
     script_file = os.path.abspath('bin/encode_vocabulary')
 
     runner = CliRunner()
@@ -493,13 +495,13 @@ def test_encode_vocabulary():
 
         outfile = "example_data_dict_filtered_encoded.json"
 
-        os.system(script_file + " " + infile_path + " " + outfile + " " + encoder_path)
+        os.system(script_file + " " + infile_path + " " + outfile + " " + encoder_path + " " + configfile_path)
 
         encoder = Base64Encoder(PatternEncoder.load(open(encoder_path, 'rb')))
 
         result_dict = json.load(open(outfile, 'r'))
 
-        results = [(level, decoded, encoder.decode(encoded).get_element_list()) for level, elements in result_dict.items() for decoded, encoded in elements.items()]
+        results = [(level, decoded, encoder.decode(encoded).get_element_list()) for level, elements in result_dict.items() for decoded, encoded in elements.items() if level != "__special__"]
         results = [len(pe) == 1 and pe[0].level == level and pe[0].form == word for level, word, pe in results]
 
     assert all(results)
@@ -508,6 +510,7 @@ def test_encode_corpus():
 
     infile_path = os.path.abspath('example_data/example_data.conllu')
     encoded_dict_path = os.path.abspath('example_data/example_data_dict_filtered_encoded.json')
+    configfile_path = os.path.abspath('example_data/example_config.json')
     expected_outfile_path = os.path.abspath('example_data/example_data_encoded.conllu')
     script_file = os.path.abspath('bin/encode_corpus')
 
@@ -516,7 +519,7 @@ def test_encode_corpus():
 
         outfile = "example_data_encoded.conllu"
 
-        os.system(script_file + " " + infile_path + " " + outfile + " " + encoded_dict_path + " lemma upos np_function --unknown \"__unknown__\"")
+        os.system(script_file + " " + infile_path + " " + outfile + " " + encoded_dict_path + " " + configfile_path)
 
 
         assert filecmp.cmp(outfile, expected_outfile_path, shallow=False)

@@ -5,6 +5,7 @@
    :maxdepth: 1
    :caption: For users
 
+   settings
    utils
    extraction
 

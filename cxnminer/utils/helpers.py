@@ -1,5 +1,10 @@
 import gzip
+import json
 import multiprocessing
+
+from factory_manager import FactoryManager
+
+from cxnminer.extractor import PatternExtractor
 
 
 class MultiprocessMap(object):
@@ -43,3 +48,16 @@ def open_file(filename, mode='r', encoding='utf-8'):
             return open(filename, mode, encoding=encoding)
         else:
             return open(filename, mode)
+
+
+def open_json_config(config):
+
+    try:
+        return json.loads(config)
+    except json.JSONDecodeError:
+        with open(config) as config_file:
+            return json.load(config_file)
+
+
+factories = FactoryManager()
+factories.add_object_hierarchy("extractor", PatternExtractor)

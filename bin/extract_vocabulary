@@ -6,30 +6,34 @@ import json
 
 import conllu
 
-from cxnminer.utils.helpers import open_file
+from cxnminer.utils.helpers import open_file, open_json_config
 
 ### extract features from tokens
-FEATURE_EXTRACTORS = {
-    "form": lambda token: token['form'],
-    "lemma": lambda token: token['lemma'],
-    "upos": lambda token: token['upos'],
-    "xpos": lambda token: token['xpos'],
-    "np_function": lambda token: token['deprel'] if token['upos'] == "NOUN" else None,
-}
+def get_feature_extractors(phrase_tags):
+
+    return {
+        "form": lambda token: token['form'],
+        "lemma": lambda token: token['lemma'],
+        "upos": lambda token: token['upos'],
+        "xpos": lambda token: token['xpos'],
+        "np_function": lambda token: token['deprel'] if token['upos'] in phrase_tags else None,
+    }
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument('infile')
     parser.add_argument('outfile')
-    parser.add_argument('levels', type=str,
-                        choices=FEATURE_EXTRACTORS.keys(),
-                        nargs='+')
+    parser.add_argument('config')
     parser.add_argument('--drop_frequencies', action='store_true', default=False)
     args = parser.parse_args()
 
+    config = open_json_config(args.config)
+    levels = [config.get("word_level")] + config.get("levels")
+    feature_extractors = get_feature_extractors(config.get("phrase_tags"))
+
     vocabulary = {}
-    for level in args.levels:
+    for level in levels:
 
         vocabulary[level] = collections.defaultdict(int)
 
@@ -39,7 +43,7 @@ if __name__ == "__main__":
 
             for level in vocabulary.keys():
 
-                value = FEATURE_EXTRACTORS[level](token)
+                value = feature_extractors[level](token)
                 if value is not None:
                     vocabulary[level][value] += 1
 

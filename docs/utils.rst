@@ -68,17 +68,9 @@ spacy
 Encode data
 -----------
 
-For the extraction of constructions, the constructions need to be encoded efficiently.
-The package comes with different encoders:
-
-BitEncoder
-  Encodes constructions using fixed length encodings for individual symbols.
-HuffmanEncoder
-  Encodes constructions using `Huffman coding <https://en.wikipedia.org/wiki/Huffman_coding>`_.
-Base64Encoder
-  This is not an encoder for constructions in it's own but takes the output of
-  another encoder and encodes it using `Base64 <https://en.wikipedia.org/wiki/Base64>`_
-  in order to enable writing the encoded patterns in text files.
+For the extraction of constructions, the constructions need to be encoded efficiently
+using `Huffman coding <https://en.wikipedia.org/wiki/Huffman_coding>`_.
+This is done in several steps.
 
 Extract dictionary
 ~~~~~~~~~~~~~~~~~~
@@ -87,8 +79,8 @@ Extract a dictionary of possible pattern elements to create an encoder.
 
 .. code-block:: bash
 
-  bin/extract_vocabulary infile outfile lemma upos
-  bin/extract_vocabulary example_data/example_data.conllu example_data/example_data_dict.json lemma upos np_function
+  bin/extract_vocabulary infile outfile config
+  bin/extract_vocabulary example_data/example_data.conllu example_data/example_data_dict.json example_data/example_config.json
 
 Options
 +++++++
@@ -102,23 +94,13 @@ outfile
   It will contain the vocabulary for the given levels in json format.
   If the filename ends with ".gz" the file will be compressed.
 
-levels
-  A list of levels from which the vocabulary is extracted.
-
-   form
-     the plain form of the token
-   lemma
-     the lemma
-   upos
-     the universal part-of-speech tag
-   xpos
-     the language specific part-of-speech tag
-   np_function
-     the dependency relation for tokens with the `upos` `NOUN`
+config
+  The configuration for construction mining as described in :doc:`settings`.
 
 --drop_frequencies
   The list can contain the frequencies (needed to create a `Huffman encoder`) or they can optionally be dropped.
 
+.. _filter-dictionary:
 
 Filter dictionary
 ~~~~~~~~~~~~~~~~~
@@ -152,8 +134,8 @@ Create and pickle an encoder based on an extracted dictionary.
 
 .. code-block:: bash
 
-  bin/create_encoder dictionaries outfile
-  bin/create_encoder example_data/example_data_dict_filtered.json example_data/example_data_encoder
+  bin/create_encoder dictionaries outfile config
+  bin/create_encoder example_data/example_data_dict_filtered.json example_data/example_data_encoder example_data/example_config.json
 
 Options
 +++++++
@@ -166,9 +148,8 @@ outfile
   The pickled encoder.
   If the filename ends with ".gz" the file will be compressed.
 
---no_unknown
-  If this flag is set, the encoder will not handle unknown items but throw an error.
-  Otherwise "__unknown__" is used for unknown items.
+config
+  The configuration for construction mining as described in :doc:`settings`.
 
 .. _encode-dictionary:
 
@@ -180,8 +161,8 @@ to encode the corpus using lookup.
 
 .. code-block:: bash
 
-  bin/encode_vocabulary vocabulary outfile encoder
-  bin/encode_vocabulary example_data/example_data_dict_filtered.json example_data/example_data_dict_filtered_encoded.json example_data/example_data_encoder --add_special --unknown __unknown__
+  bin/encode_vocabulary vocabulary outfile encoder config
+  bin/encode_vocabulary example_data/example_data_dict_filtered.json example_data/example_data_dict_filtered_encoded.json example_data/example_data_encoder example_data/example_config.json
 
 Options
 +++++++
@@ -199,14 +180,11 @@ outfile
 encoder
   The pickled encoder.
 
+config
+  The configuration for construction mining as described in :doc:`settings`.
+
 --no_frequencies
   Add this flag if the dictionary does not contain frequencies.
-
---add_special
-  Encode the special elements of the pattern type as well.
-
---unknown
-  Represent unknown elements with the given string.
 
 --loging_config
   See above.
@@ -221,8 +199,8 @@ Uses an encoded dicitionary to efficiently encode the corpus.
 
 .. code-block:: bash
 
-  bin/encode_corpus infile outfile dictionary lemma upos
-  bin/encode_corpus example_data/example_data.conllu example_data/example_data_encoded.conllu example_data/example_data_dict_filtered_encoded.json lemma upos np_function --unknown __unknown__
+  bin/encode_corpus infile outfile dictionary config
+  bin/encode_corpus example_data/example_data.conllu example_data/example_data_encoded.conllu example_data/example_data_dict_filtered_encoded.json example_data/example_config.json
 
 Options
 +++++++
@@ -239,12 +217,9 @@ outfile
 dictionary
   The encoded dictionary.
 
-levels
-  The levels to be encoded -- see above.
+config
+  The configuration for construction mining as described in :doc:`settings`.
 
---unknown
-  The value given for this option is used for unknown tokens.
-  
 --processes
   Controls the number of processes to be used.
 

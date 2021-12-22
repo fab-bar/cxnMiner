@@ -1,0 +1,15 @@
+{
+    "word_level": "lemma",
+    "levels": ["upos", "np_function"],
+    "phrase_tags": [],
+    "unknown": "__unknown__",
+    "extractor": {
+        "type": "sngram",
+        "options": {
+            "max_size": 4,
+            "left_bracket": "[",
+            "right_bracket": "]",
+            "comma": ","
+        }
+    }
+}

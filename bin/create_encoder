@@ -6,26 +6,27 @@ import json
 from cxnminer.extractor import SyntacticNGramExtractor
 from cxnminer.pattern_encoder import BitEncoder, HuffmanEncoder
 
-from cxnminer.utils.helpers import open_file
+from cxnminer.utils.helpers import factories, open_file, open_json_config
 
 if __name__ == "__main__":
 
   parser = argparse.ArgumentParser()
   parser.add_argument('dictionaries')
   parser.add_argument('outfile')
-  parser.add_argument('--no_unknown',  action='store_true', default=False)
+  parser.add_argument('config')
   args = parser.parse_args()
 
   with open_file(args.dictionaries) as dict_file:
     vocabularies = json.load(dict_file)
 
-  if args.no_unknown:
-    unknown = None
-  else:
-    unknown = '__unknown__'
+
+  config = open_json_config(args.config)
+
+  extractor = factories.create_from_name('extractor', config['extractor'])
+  unknown = config["unknown"]
 
   pattern_encoder = HuffmanEncoder(vocabularies,
-                                   SyntacticNGramExtractor.get_pattern_type(),
+                                   extractor.get_pattern_type(),
                                    unknown=unknown)
 
 

@@ -11,8 +11,8 @@ Get lists of patterns and corresponding base patterns from the corpus.
 
 .. code-block:: bash
 
-  cxnminer extract-patterns infile outfile_patterns outfile_base encoded_dictionary word_level phrae_tags
-  cxnminer extract-patterns example_data/example_data_encoded.conllu example_data/example_data_patterns.tsv example_data/example_data_base_patterns.tsv example_data/example_data_dict_filtered_encoded.json lemma NOUN --max_pattern_size 8
+  cxnminer extract-patterns infile outfile_patterns outfile_base encoded_dictionary config
+  cxnminer extract-patterns example_data/example_data_encoded.conllu example_data/example_data_patterns.tsv example_data/example_data_base_patterns.tsv example_data/example_data_dict_filtered_encoded.json example_data/example_config.json
 
 Options
 ~~~~~~~
@@ -32,17 +32,11 @@ outfile_base
 encoded_dictionaries
   Encoded dictionaries as described in :ref:`encode-dictionary`.
 
-word_level
-  The name of the column from the conllu data that is used for words in patterns.
-
-phrase_tags
-  Here multiple POS tags can be given. Whenever a token with one of these tags is seen, the corresponding subtree is also collapsed into a single node during the pattern extraction.
+config
+  The configuration for construction mining as described in :doc:`settings`.
 
 --keep_only_word
   Keep only patterns with the given word.
-
---max_pattern_size
-  Upper limit for the size of the patterns.
 
 --keep_only_dict_words
   Removes all patterns that contain an element which is not contained in the dictionary. This does not remove patterns which contain the special element "__unknown__" which might has been introduced during the preparation of the data due to filtering the dicitionary.
@@ -119,7 +113,7 @@ After having decoded the pattern set, further statistics can be collected:
 
   cxnminer utils get-vocabulary-probs example_data/example_data_dict.json example_data/example_data_dictionary_probs.json
   cxnminer utils get-pattern-type-freq example_data/example_data_pattern_set_frequent_decoded example_data/example_data_patterns_simple_stats.json example_data/example_data_pattern_set_frequent_type_frequencies.json
-  cxnminer utils add-pattern-stats example_data/example_data_pattern_set_frequent.jsonl example_data/example_data_patterns_stats.json --decoded_patterns example_data/example_data_pattern_set_frequent_decoded --base_level lemma --vocabulary_probs example_data/example_data_dictionary_probs.json --known_stats example_data/example_data_patterns_simple_stats.json --pattern_profile_frequency example_data/example_data_pattern_set_frequent_type_frequencies.json
+  cxnminer utils add-pattern-stats example_data/example_data_pattern_set_frequent.jsonl example_data/example_data_patterns_stats.json --decoded_patterns example_data/example_data_pattern_set_frequent_decoded --config example_data/example_config.json --vocabulary_probs example_data/example_data_dictionary_probs.json --known_stats example_data/example_data_patterns_simple_stats.json --pattern_profile_frequency example_data/example_data_pattern_set_frequent_type_frequencies.json
 
 
 Get best patterns

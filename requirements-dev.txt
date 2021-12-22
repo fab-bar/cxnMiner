@@ -50,6 +50,8 @@ decorator==5.1.0
     # via ipython
 distlib==0.3.4
     # via virtualenv
+factory-manager==0.1.0
+    # via cxnMiner (setup.py)
 filelock==3.4.0
     # via
     #   tox
@@ -90,6 +92,8 @@ murmurhash==1.0.6
     #   preshed
     #   spacy
     #   thinc
+mypy-extensions==0.4.3
+    # via typing-inspect
 numpy==1.21.4
     # via
     #   blis
@@ -203,6 +207,9 @@ typing-extensions==3.10.0.2
     #   pydantic
     #   spacy
     #   thinc
+    #   typing-inspect
+typing-inspect==0.7.1
+    # via factory-manager
 urllib3==1.26.7
     # via requests
 virtualenv==20.10.0

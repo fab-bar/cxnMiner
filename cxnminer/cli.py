@@ -15,11 +15,10 @@ import pickle
 import click
 import conllu
 
-from cxnminer.extractor import SyntacticNGramExtractor
 from cxnminer.pattern import SNGram, PatternElement
 from cxnminer.pattern_collection import PatternCollection
 from cxnminer.pattern_encoder import PatternEncoder, Base64Encoder, HuffmanEncoder
-from cxnminer.utils.helpers import open_file, MultiprocessMap
+from cxnminer.utils.helpers import factories, open_file, open_json_config, MultiprocessMap
 
 @click.group()
 @click.pass_context
@@ -174,16 +173,18 @@ def pattern_extraction(sentence_tuple, extractor, word_level, token_start, token
 @click.argument('outfile_patterns')
 @click.argument('outfile_base')
 @click.argument('encoded_dictionaries', type=str)
-@click.argument('word_level', type=str)
-@click.argument('phrase_tags', type=str, nargs=-1)
+@click.argument('config')
 @click.option('--keep_only_word', type=str)
-@click.option('--max_pattern_size', type=int, default=4)
 @click.option('--keep_only_dict_words', is_flag=True)
 @click.option('--skip_unknown', is_flag=True)
 @click.option('--only_base', is_flag=True)
 def extract_patterns(ctx, infile, outfile_patterns, outfile_base, encoded_dictionaries,
-                     word_level, phrase_tags, keep_only_word, max_pattern_size,
-                     keep_only_dict_words, skip_unknown, only_base):
+                     config, keep_only_word, keep_only_dict_words, skip_unknown, only_base):
+
+    config = open_json_config(config)
+    word_level = config["word_level"]
+    phrase_tags = config["phrase_tags"]
+    unknown_type = config["unknown"]
 
     try:
         encoded_dict = json.loads(encoded_dictionaries)
@@ -198,7 +199,7 @@ def extract_patterns(ctx, infile, outfile_patterns, outfile_base, encoded_dictio
     unknown = {}
     for level in encoded_dict.keys():
         if level != "__special__":
-            unknown[level] = encoded_dict[level].get('__unknown__', '__unknown__')
+            unknown[level] = encoded_dict[level].get(unknown_type, unknown_type)
 
     if keep_only_dict_words:
         known = {level: set(vocab.values()) for level, vocab in encoded_dict.items() if isinstance(vocab, collections.abc.Mapping)}
@@ -216,12 +217,14 @@ def extract_patterns(ctx, infile, outfile_patterns, outfile_base, encoded_dictio
 
     del encoded_dict
 
-    extractor = SyntacticNGramExtractor(
-        max_size=max_pattern_size,
-        special_node_conversion=special_node_conversion,
-        left_bracket=meta_symbols.get("[", None),
-        right_bracket=meta_symbols.get("]", None),
-        comma=meta_symbols.get(",", None))
+    extractor_config = config["extractor"]
+    extractor_config['options']['special_node_conversion'] = special_node_conversion
+    extractor_config['options']['left_bracket'] = meta_symbols.get(extractor_config['options']['left_bracket'])
+    extractor_config['options']['right_bracket'] = meta_symbols.get(extractor_config['options']['right_bracket'])
+    extractor_config['options']['comma'] = meta_symbols.get(extractor_config['options']['comma'])
+
+
+    extractor = factories.create_from_name('extractor', extractor_config)
 
     with open_file(infile) as infile:
         with open_file(outfile_patterns, 'w') as outfile_patterns:
@@ -439,12 +442,15 @@ def get_stats(line, decoded_patterns, known_stats, base_patterns, base_level, pa
 @click.option('--known_stats')
 @click.option('--base_patterns')
 @click.option('--decoded_patterns')
-@click.option('--base_level')
+@click.option('--config')
 @click.option('--vocabulary_probs')
 @click.option('--pattern_profile_frequency')
-def add_pattern_stats(ctx, infile_patterns, outfile, known_stats, base_patterns, decoded_patterns, base_level,
+def add_pattern_stats(ctx, infile_patterns, outfile, known_stats, base_patterns, decoded_patterns, config,
                       vocabulary_probs, pattern_profile_frequency):
 
+    base_level = None
+    if config is not None:
+        base_level = open_json_config(config)['word_level']
 
     if decoded_patterns is not None:
         with open_file(decoded_patterns, 'rb') as infile:
