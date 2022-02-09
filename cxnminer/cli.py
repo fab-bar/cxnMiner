@@ -7,6 +7,7 @@ import itertools
 import json
 import logging
 import logging.config
+import operator
 import math
 import os
 import os.path
@@ -512,6 +513,11 @@ def add_pattern_stats(ctx, infile_patterns, outfile, known_stats, base_patterns,
                 json.dump((pattern, stats), o)
                 o.write("\n")
 
+filter_ops = {
+    "==": operator.eq,
+    ">=": operator.ge,
+    "<": operator.lt
+}
 
 @utils.command()
 @click.pass_context
@@ -520,13 +526,15 @@ def add_pattern_stats(ctx, infile_patterns, outfile, known_stats, base_patterns,
 @click.argument('feature')
 @click.argument('threshold', type=int)
 @click.argument('outfile')
-def filter_patterns(ctx, patterns, stats, feature, threshold, outfile):
+@click.option('--operator', 'op', type=click.Choice(tuple(filter_ops.keys())), default=">=")
+def filter_patterns(ctx, patterns, stats, feature, threshold, outfile, op):
+
 
     keep = set()
     with open_file(stats) as infile:
         for line in infile:
             pattern, stats = json.loads(line)
-            if stats.get(feature, 0) >= threshold:
+            if filter_ops[op](stats.get(feature, 0), threshold):
                 keep.add(pattern)
 
 
