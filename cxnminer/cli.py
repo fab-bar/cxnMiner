@@ -369,6 +369,7 @@ def get_pattern_type_freq(ctx, infile_patterns, frequency_stats, outfile):
 def get_stats(line, decoded_patterns, known_stats, base_patterns, base_level, pattern_profile_frequency, vocabulary_probs):
 
     pattern, base_ids = json.loads(line)
+    base_ids = set(base_ids)
 
     stats = {}
     if known_stats is not None:
