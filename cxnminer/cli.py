@@ -583,23 +583,35 @@ def decode_patterns(ctx, infile, encoder, outfile, processes):
 @utils.command()
 @click.pass_context
 @click.argument('patterns_file')
-@click.argument('pattern_stats')
+@click.argument('pattern_stats_file')
 @click.argument('stat')
 @click.argument('n', type=int)
 @click.argument('outfile')
-def get_top_n(ctx, patterns_file, pattern_stats, stat, n, outfile):
+def get_top_n(ctx, patterns_file, pattern_stats_file, stat, n, outfile):
 
-    with open_file(pattern_stats) as infile:
+    pattern_stats = {}
 
-        pattern_stats = {}
+    ## collect patterns that are in the pattern_file
+    with open_file(patterns_file) as infile:
+
+            for line in infile:
+
+                pattern, _ = json.loads(line)
+                pattern_stats[pattern] = []
+
+    ## get statistics for these patterns
+    with open_file(pattern_stats_file) as infile:
 
         for line in infile:
             pattern, stats = json.loads(line)
-            pattern_stats[pattern] = stats
+            if pattern in pattern_stats:
+                pattern_stats[pattern] = stats
 
+    ## get top n patterns
     patterns = sorted(pattern_stats.items(), key=lambda item: item[1][stat], reverse=True)
     patterns = {pattern[0]: [rank] for rank, pattern in enumerate(patterns[:n])}
 
+    ## add content to the top patterns
     with open_file(patterns_file) as infile:
 
             for line in infile:
