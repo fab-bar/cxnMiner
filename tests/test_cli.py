@@ -421,26 +421,112 @@ def test_extract_patterns_with_logging(tofile):
         assert os.path.isfile(log_filename)
 
 
-############################ tests for scripts in bin
-
 def test_extract_vocabulary():
 
     infile_path = os.path.abspath('example_data/example_data.conllu')
     expected_outfile_path = os.path.abspath('example_data/example_data_dict.json')
     configfile_path = os.path.abspath('example_data/example_config.json')
-    script_file = os.path.abspath('bin/extract_vocabulary')
 
     runner = CliRunner()
     with runner.isolated_filesystem():
 
         outfile = "example_data_dict.json"
 
-        os.system(script_file + " " + infile_path + " " + outfile + " " + configfile_path)
+        runner.invoke(main, [
+            'utils',
+            'extract-vocabulary',
+            infile_path,
+            outfile,
+            configfile_path
+        ])
 
         expected_dict = json.load(open(expected_outfile_path, 'r'))
         result_dict = json.load(open(outfile, 'r'))
 
     assert result_dict == expected_dict
+
+def test_create_encoder():
+
+    infile_path = os.path.abspath('example_data/example_data_dict_filtered.json')
+    configfile_path = os.path.abspath('example_data/example_config.json')
+
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+
+        outfile = "example_data_encoder"
+
+        runner.invoke(main, [
+            'utils',
+            'create-encoder',
+            infile_path,
+            outfile,
+            configfile_path
+        ])
+
+        encoder = Base64Encoder(PatternEncoder.load(open(outfile, 'rb')))
+        dict_ = json.load(open(infile_path, 'r'))
+
+        pattern_elements = [PatternElement(word, level) for level, elements in dict_.items() for word in elements.keys()]
+        results = [
+            encoder.decode(encoder.encode_item(pe)).get_element_list()[0] == pe for pe in pattern_elements
+        ]
+
+    assert all(results)
+
+def test_encode_vocabulary():
+
+    infile_path = os.path.abspath('example_data/example_data_dict_filtered.json')
+    encoder_path = os.path.abspath('example_data/example_data_encoder')
+    configfile_path = os.path.abspath('example_data/example_config.json')
+
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+
+        outfile = "example_data_dict_filtered_encoded.json"
+
+        runner.invoke(main, [
+            'utils',
+            'encode-vocabulary',
+            infile_path,
+            outfile,
+            encoder_path,
+            configfile_path
+        ])
+
+        encoder = Base64Encoder(PatternEncoder.load(open(encoder_path, 'rb')))
+
+        result_dict = json.load(open(outfile, 'r'))
+
+        results = [(level, decoded, encoder.decode(encoded).get_element_list()) for level, elements in result_dict.items() for decoded, encoded in elements.items() if level != "__special__"]
+        results = [len(pe) == 1 and pe[0].level == level and pe[0].form == word for level, word, pe in results]
+
+    assert all(results)
+
+def test_encode_corpus():
+
+    infile_path = os.path.abspath('example_data/example_data.conllu')
+    encoded_dict_path = os.path.abspath('example_data/example_data_dict_filtered_encoded.json')
+    configfile_path = os.path.abspath('example_data/example_config.json')
+    expected_outfile_path = os.path.abspath('example_data/example_data_encoded.conllu')
+
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+
+        outfile = "example_data_encoded.conllu"
+
+        runner.invoke(main, [
+            'utils',
+            'encode-corpus',
+            infile_path,
+            outfile,
+            encoded_dict_path,
+            configfile_path
+        ])
+
+
+        assert filecmp.cmp(outfile, expected_outfile_path, shallow=False)
+
+############################ tests for scripts in bin
 
 def test_filter_vocabulary():
 
@@ -460,66 +546,3 @@ def test_filter_vocabulary():
 
     assert result_dict == expected_dict
 
-def test_create_encoder():
-
-    infile_path = os.path.abspath('example_data/example_data_dict_filtered.json')
-    configfile_path = os.path.abspath('example_data/example_config.json')
-    script_file = os.path.abspath('bin/create_encoder')
-
-    runner = CliRunner()
-    with runner.isolated_filesystem():
-
-        outfile = "example_data_encoder"
-
-        exit_status = os.system(script_file + " " + infile_path + " " + outfile + " " + configfile_path)
-
-        encoder = Base64Encoder(PatternEncoder.load(open(outfile, 'rb')))
-        dict_ = json.load(open(infile_path, 'r'))
-
-        pattern_elements = [PatternElement(word, level) for level, elements in dict_.items() for word in elements.keys()]
-        results = [
-            encoder.decode(encoder.encode_item(pe)).get_element_list()[0] == pe for pe in pattern_elements
-        ]
-
-    assert all(results)
-
-def test_encode_vocabulary():
-
-    infile_path = os.path.abspath('example_data/example_data_dict_filtered.json')
-    encoder_path = os.path.abspath('example_data/example_data_encoder')
-    configfile_path = os.path.abspath('example_data/example_config.json')
-    script_file = os.path.abspath('bin/encode_vocabulary')
-
-    runner = CliRunner()
-    with runner.isolated_filesystem():
-
-        outfile = "example_data_dict_filtered_encoded.json"
-
-        os.system(script_file + " " + infile_path + " " + outfile + " " + encoder_path + " " + configfile_path)
-
-        encoder = Base64Encoder(PatternEncoder.load(open(encoder_path, 'rb')))
-
-        result_dict = json.load(open(outfile, 'r'))
-
-        results = [(level, decoded, encoder.decode(encoded).get_element_list()) for level, elements in result_dict.items() for decoded, encoded in elements.items() if level != "__special__"]
-        results = [len(pe) == 1 and pe[0].level == level and pe[0].form == word for level, word, pe in results]
-
-    assert all(results)
-
-def test_encode_corpus():
-
-    infile_path = os.path.abspath('example_data/example_data.conllu')
-    encoded_dict_path = os.path.abspath('example_data/example_data_dict_filtered_encoded.json')
-    configfile_path = os.path.abspath('example_data/example_config.json')
-    expected_outfile_path = os.path.abspath('example_data/example_data_encoded.conllu')
-    script_file = os.path.abspath('bin/encode_corpus')
-
-    runner = CliRunner()
-    with runner.isolated_filesystem():
-
-        outfile = "example_data_encoded.conllu"
-
-        os.system(script_file + " " + infile_path + " " + outfile + " " + encoded_dict_path + " " + configfile_path)
-
-
-        assert filecmp.cmp(outfile, expected_outfile_path, shallow=False)

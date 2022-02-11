@@ -253,6 +253,194 @@ def extract_patterns(ctx, infile, outfile_patterns, outfile_base, encoded_dictio
 def utils(ctx):
     pass
 
+### extract features from tokens
+def get_feature_extractors(phrase_tags):
+
+    return {
+        "form": lambda token: token['form'],
+        "lemma": lambda token: token['lemma'],
+        "upos": lambda token: token['upos'],
+        "xpos": lambda token: token['xpos'],
+        "np_function": lambda token: token['deprel'] if token['upos'] in phrase_tags else None,
+    }
+
+@utils.command()
+@click.argument('infile')
+@click.argument('outfile')
+@click.argument('config')
+@click.option('--drop_frequencies', is_flag=True)
+@click.pass_context
+def extract_vocabulary(ctx, infile, outfile, config, drop_frequencies):
+
+    config = open_json_config(config)
+    levels = [config.get("word_level")] + config.get("levels")
+    feature_extractors = get_feature_extractors(config.get("phrase_tags"))
+
+    vocabulary = {}
+    for level in levels:
+
+        vocabulary[level] = collections.defaultdict(int)
+
+    for sentence in conllu.parse_incr(open_file(infile)):
+
+        for token in sentence:
+
+            for level in vocabulary.keys():
+
+                value = feature_extractors[level](token)
+                if value is not None:
+                    vocabulary[level][value] += 1
+
+    if drop_frequencies:
+        for level in vocabulary:
+
+            vocabulary[level] = list(vocabulary[level].keys())
+
+
+    with open_file(outfile, 'w') as outfile:
+        print(json.dumps(vocabulary), file=outfile)
+
+
+@utils.command()
+@click.argument('dictionaries')
+@click.argument('outfile')
+@click.argument('config')
+@click.pass_context
+def create_encoder(ctx, dictionaries, outfile, config):
+
+  with open_file(dictionaries) as dict_file:
+    vocabularies = json.load(dict_file)
+
+  config = open_json_config(config)
+
+  extractor = factories.create_from_name('extractor', config['extractor'])
+  unknown = config["unknown"]
+
+  pattern_encoder = HuffmanEncoder(vocabularies,
+                                   extractor.get_pattern_type(),
+                                   unknown=unknown)
+
+
+  with open_file(outfile, 'wb') as outfile:
+    pattern_encoder.save(outfile)
+
+
+@utils.command()
+@click.argument('vocabulary')
+@click.argument('outfile')
+@click.argument('encoder')
+@click.argument('config')
+@click.option('--no_frequencies', is_flag=True)
+@click.pass_context
+def encode_vocabulary(ctx, vocabulary, outfile, encoder, config, no_frequencies):
+
+  logger = ctx.obj['logger']
+
+  config = open_json_config(config)
+
+  try:
+    vocabularies = json.loads(vocabulary)
+  except json.JSONDecodeError:
+    with open_file(vocabulary) as dict_file:
+      vocabularies = json.load(dict_file)
+
+  logger.info("Read vocabulary.")
+
+  with open_file(encoder, 'rb') as encoder_file:
+    encoder = Base64Encoder(PatternEncoder.load(encoder_file), binary=False)
+
+  encoded_vocabularies = collections.defaultdict(dict)
+  levels = set(vocabularies.keys())
+  levels.update(encoder.get_levels())
+
+  for level in levels:
+    if not no_frequencies:
+      items = vocabularies.get(level, {}).keys()
+    else:
+      items = vocabularies.get(level, [])
+
+    logger.info("Start encoding level " + level + " with " + str(len(items)) + " elements.")
+
+    for word in items:
+      logger.info("Encoding word " + word + ".")
+      encoded_vocabularies[level][word] = encoder.encode_item(PatternElement(word, level))
+
+    logger.info("Encoding unknown element.")
+    encoded_vocabularies[level][config["unknown"]] = encoder.encode_item(PatternElement(config["unknown"], level))
+
+
+  logger.info("Encoding special elements.")
+  for word in encoder.get_pattern_type().specialElements():
+    encoded_vocabularies["__special__"][word] = encoder.encode_item(word)
+
+  encoded_vocabularies["__special__"][encoder.token_start] = encoder.encode_item(encoder.token_start)
+  encoded_vocabularies["__special__"][encoder.token_end] = encoder.encode_item(encoder.token_end)
+
+  logger.info("Finished encoding.")
+
+  with open_file(outfile, 'w') as outfile:
+    json.dump(encoded_vocabularies, outfile)
+
+
+level_dict = {
+    'np_function': 'deprel'
+}
+
+def encode_item(level, level_name, token, vocabulary, unknown=None, logger=None):
+
+    encoded = vocabulary.get(level).get(token[level_name], vocabulary.get(level).get(unknown, None))
+
+    if encoded is None:
+
+        if logger is not None:
+            logger.warning(str(PatternElement(token[level_name], level)) + " was not encoded.")
+        encoded = token[level_name]
+
+    return encoded
+
+
+@utils.command()
+@click.argument('infile')
+@click.argument('outfile')
+@click.argument('dictionary')
+@click.argument('config')
+@click.option('--processes', type=int, default=4)
+@click.pass_context
+def encode_corpus(ctx, infile, outfile, dictionary, config, processes):
+
+    global encode_sentence
+
+    logger = ctx.obj['logger']
+
+    config = open_json_config(config)
+    levels = [config.get("word_level")] + config.get("levels")
+
+    with open_file(dictionary) as dict_file:
+        vocabulary = json.load(dict_file)
+
+    def encode_sentence(sentence):
+
+        for token in sentence:
+
+            for level in levels:
+
+                ## get name of level, if it is an alias
+                level_name = level_dict.get(level, level)
+
+                ## write encoded data into token
+                token[level_name] = encode_item(level, level_name, token, vocabulary, config['unknown'], logger)
+
+        logger.info("Encoded sentence " + sentence.metadata.get('sent_id', sentence.metadata.get('text', '')))
+        return sentence
+
+    with open_file(outfile, 'w') as outfile:
+
+        with MultiprocessMap(processes) as m:
+
+            for sentence in m(encode_sentence, conllu.parse_incr(open_file(infile))):
+
+                print(sentence.serialize(), file=outfile)
+
 
 @utils.command()
 @click.argument('infile')
