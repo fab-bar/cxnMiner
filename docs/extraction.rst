@@ -101,7 +101,10 @@ patterns that appear only once:
 
   cxnminer utils filter-patterns example_data/example_data_pattern_set.jsonl example_data/example_data_patterns_simple_stats.json frequency 2 example_data/example_data_pattern_set_frequent.jsonl
 
-In order to collect statistics that need acces to the individual elements of the patterns, e.g., the schematicity, the pattern set has to be decoded:
+The relation between the given statistics and the threshold can be defined by
+adding the option `--operator` which defaults to `>=`.
+
+In order to collect statistics that need access to the individual elements of the patterns, e.g., the schematicity, the pattern set has to be decoded:
 
 .. code-block:: bash
 

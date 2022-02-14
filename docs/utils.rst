@@ -79,8 +79,8 @@ Extract a dictionary of possible pattern elements to create an encoder.
 
 .. code-block:: bash
 
-  bin/extract_vocabulary infile outfile config
-  bin/extract_vocabulary example_data/example_data.conllu example_data/example_data_dict.json example_data/example_config.json
+  cxnminer utils extract-vocabulary infile outfile config
+  cxnminer utils extract-vocabulary example_data/example_data.conllu example_data/example_data_dict.json example_data/example_config.json
 
 Options
 +++++++
@@ -134,8 +134,8 @@ Create and pickle an encoder based on an extracted dictionary.
 
 .. code-block:: bash
 
-  bin/create_encoder dictionaries outfile config
-  bin/create_encoder example_data/example_data_dict_filtered.json example_data/example_data_encoder example_data/example_config.json
+  cxnminer utils create-encoder dictionaries outfile config
+  cxnminer utils create-encoder example_data/example_data_dict_filtered.json example_data/example_data_encoder example_data/example_config.json
 
 Options
 +++++++
@@ -161,8 +161,8 @@ to encode the corpus using lookup.
 
 .. code-block:: bash
 
-  bin/encode_vocabulary vocabulary outfile encoder config
-  bin/encode_vocabulary example_data/example_data_dict_filtered.json example_data/example_data_dict_filtered_encoded.json example_data/example_data_encoder example_data/example_config.json
+  cxnminer utils encode-vocabulary vocabulary outfile encoder config
+  cxnminer utils encode-vocabulary example_data/example_data_dict_filtered.json example_data/example_data_dict_filtered_encoded.json example_data/example_data_encoder example_data/example_config.json
 
 Options
 +++++++
@@ -199,8 +199,8 @@ Uses an encoded dicitionary to efficiently encode the corpus.
 
 .. code-block:: bash
 
-  bin/encode_corpus infile outfile dictionary config
-  bin/encode_corpus example_data/example_data.conllu example_data/example_data_encoded.conllu example_data/example_data_dict_filtered_encoded.json example_data/example_config.json
+  cxnminer utils encode-corpus infile outfile dictionary config
+  cxnminer utils encode-corpus example_data/example_data.conllu example_data/example_data_encoded.conllu example_data/example_data_dict_filtered_encoded.json example_data/example_config.json
 
 Options
 +++++++
