@@ -4,11 +4,11 @@
 #
 #    pip-compile --output-file=requirements-test.txt requirements-test.in setup.py
 #
-attrs==21.2.0
+attrs==21.4.0
     # via pytest
-bitarray==2.3.4
+bitarray==2.3.6
     # via cxnMiner (setup.py)
-blis==0.7.5
+blis==0.7.6
     # via
     #   spacy
     #   thinc
@@ -19,7 +19,7 @@ catalogue==2.0.6
     #   thinc
 certifi==2021.10.8
     # via requests
-charset-normalizer==2.0.9
+charset-normalizer==2.0.12
     # via requests
 click==8.0.3
     # via
@@ -27,20 +27,20 @@ click==8.0.3
     #   typer
 conllu==3.1.1
     # via cxnMiner (setup.py)
-coverage[toml]==6.2
+coverage[toml]==6.3.1
     # via pytest-cov
 cymem==2.0.6
     # via
     #   preshed
     #   spacy
     #   thinc
-decopatch==1.4.8
+decopatch==1.4.9
     # via pytest-cases
 factory-manager==0.1.0
     # via cxnMiner (setup.py)
 idna==3.3
     # via requests
-importlib-metadata==4.8.2
+importlib-metadata==4.11.1
     # via
     #   click
     #   pluggy
@@ -51,7 +51,7 @@ jinja2==3.0.3
     # via spacy
 langcodes==3.3.0
     # via spacy
-makefun==1.12.1
+makefun==1.13.1
     # via
     #   decopatch
     #   pytest-cases
@@ -64,7 +64,7 @@ murmurhash==1.0.6
     #   thinc
 mypy-extensions==0.4.3
     # via typing-inspect
-numpy==1.21.4
+numpy==1.21.5
     # via
     #   blis
     #   spacy
@@ -87,21 +87,21 @@ pydantic==1.8.2
     # via
     #   spacy
     #   thinc
-pyparsing==3.0.6
+pyparsing==3.0.7
     # via packaging
-pytest==6.2.5
+pytest==7.0.1
     # via
     #   -r requirements-test.in
     #   pytest-cov
-pytest-cases==3.6.5
+pytest-cases==3.6.9
     # via -r requirements-test.in
 pytest-cov==3.0.0
     # via -r requirements-test.in
-requests==2.26.0
+requests==2.27.1
     # via spacy
 smart-open==5.2.1
     # via pathy
-spacy==3.2.1
+spacy==3.2.2
     # via cxnMiner (setup.py)
 spacy-legacy==3.0.8
     # via spacy
@@ -113,10 +113,10 @@ srsly==2.4.2
     #   thinc
 thinc==8.0.13
     # via spacy
-toml==0.10.2
-    # via pytest
-tomli==1.2.2
-    # via coverage
+tomli==2.0.1
+    # via
+    #   coverage
+    #   pytest
 tqdm==4.62.3
     # via spacy
 typer==0.4.0
@@ -133,14 +133,14 @@ typing-extensions==3.10.0.2
     #   typing-inspect
 typing-inspect==0.7.1
     # via factory-manager
-urllib3==1.26.7
+urllib3==1.26.8
     # via requests
 wasabi==0.9.0
     # via
     #   spacy
     #   spacy-loggers
     #   thinc
-zipp==3.6.0
+zipp==3.7.0
     # via
     #   catalogue
     #   importlib-metadata

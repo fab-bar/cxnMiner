@@ -4,15 +4,13 @@
 #
 #    pip-compile --output-file=requirements-dev.txt requirements-dev.in requirements-test.in setup.py
 #
-attrs==21.2.0
+attrs==21.4.0
     # via pytest
 backcall==0.2.0
     # via ipython
-backports.entry-points-selectable==1.1.1
-    # via virtualenv
-bitarray==2.3.4
+bitarray==2.3.6
     # via cxnMiner (setup.py)
-blis==0.7.5
+blis==0.7.6
     # via
     #   spacy
     #   thinc
@@ -23,7 +21,7 @@ catalogue==2.0.6
     #   thinc
 certifi==2021.10.8
     # via requests
-charset-normalizer==2.0.9
+charset-normalizer==2.0.12
     # via requests
 click==8.0.3
     # via
@@ -31,7 +29,7 @@ click==8.0.3
     #   typer
 conllu==3.1.1
     # via cxnMiner (setup.py)
-coverage[toml]==6.2
+coverage[toml]==6.3.1
     # via
     #   coverage-badge
     #   pytest-cov
@@ -42,17 +40,17 @@ cymem==2.0.6
     #   preshed
     #   spacy
     #   thinc
-de-core-news-sm @ https://github.com/explosion/spacy-models/releases/download/de_core_news_sm-3.2.0/de_core_news_sm-3.2.0.tar.gz
+de_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/de_core_news_sm-3.2.0/de_core_news_sm-3.2.0.tar.gz
     # via -r requirements-dev.in
-decopatch==1.4.8
+decopatch==1.4.9
     # via pytest-cases
-decorator==5.1.0
+decorator==5.1.1
     # via ipython
 distlib==0.3.4
     # via virtualenv
 factory-manager==0.1.0
     # via cxnMiner (setup.py)
-filelock==3.4.0
+filelock==3.5.0
     # via
     #   tox
     #   virtualenv
@@ -60,7 +58,7 @@ gensim==4.1.2
     # via -r requirements-dev.in
 idna==3.3
     # via requests
-importlib-metadata==4.8.2
+importlib-metadata==4.11.1
     # via
     #   click
     #   pluggy
@@ -69,7 +67,7 @@ importlib-metadata==4.8.2
     #   virtualenv
 iniconfig==1.1.1
     # via pytest
-ipython==7.30.1
+ipython==7.31.1
     # via -r requirements-dev.in
 jedi==0.18.1
     # via ipython
@@ -79,7 +77,7 @@ jinja2==2.11.3
     #   spacy
 langcodes==3.3.0
     # via spacy
-makefun==1.12.1
+makefun==1.13.1
     # via
     #   decopatch
     #   pytest-cases
@@ -94,7 +92,7 @@ murmurhash==1.0.6
     #   thinc
 mypy-extensions==0.4.3
     # via typing-inspect
-numpy==1.21.4
+numpy==1.21.5
     # via
     #   blis
     #   gensim
@@ -114,7 +112,7 @@ pexpect==4.8.0
     # via ipython
 pickleshare==0.7.5
     # via ipython
-platformdirs==2.4.0
+platformdirs==2.5.0
     # via virtualenv
 pluggy==1.0.0
     # via
@@ -124,7 +122,7 @@ preshed==3.0.6
     # via
     #   spacy
     #   thinc
-prompt-toolkit==3.0.24
+prompt-toolkit==3.0.28
     # via ipython
 ptyprocess==0.7.0
     # via pexpect
@@ -138,19 +136,19 @@ pydantic==1.8.2
     # via
     #   spacy
     #   thinc
-pygments==2.10.0
+pygments==2.11.2
     # via ipython
-pyparsing==3.0.6
+pyparsing==3.0.7
     # via packaging
-pytest==6.2.5
+pytest==7.0.1
     # via
     #   -r requirements-test.in
     #   pytest-cov
-pytest-cases==3.6.5
+pytest-cases==3.6.9
     # via -r requirements-test.in
 pytest-cov==3.0.0
     # via -r requirements-test.in
-requests==2.26.0
+requests==2.27.1
     # via
     #   pybadges
     #   spacy
@@ -164,7 +162,7 @@ smart-open==5.2.1
     # via
     #   gensim
     #   pathy
-spacy==3.2.1
+spacy==3.2.2
     # via
     #   cxnMiner (setup.py)
     #   de-core-news-sm
@@ -179,12 +177,12 @@ srsly==2.4.2
 thinc==8.0.13
     # via spacy
 toml==0.10.2
+    # via tox
+tomli==2.0.1
     # via
+    #   coverage
     #   pytest
-    #   tox
-tomli==1.2.2
-    # via coverage
-tox==3.24.4
+tox==3.24.5
     # via
     #   -r requirements-dev.in
     #   tox-battery
@@ -210,9 +208,9 @@ typing-extensions==3.10.0.2
     #   typing-inspect
 typing-inspect==0.7.1
     # via factory-manager
-urllib3==1.26.7
+urllib3==1.26.8
     # via requests
-virtualenv==20.10.0
+virtualenv==20.13.1
     # via tox
 wasabi==0.9.0
     # via
@@ -221,7 +219,7 @@ wasabi==0.9.0
     #   thinc
 wcwidth==0.2.5
     # via prompt-toolkit
-zipp==3.6.0
+zipp==3.7.0
     # via
     #   catalogue
     #   importlib-metadata
