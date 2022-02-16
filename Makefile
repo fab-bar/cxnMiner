@@ -58,5 +58,5 @@ coverage: requirements-test.txt myvenv
 
 .PHONY: badges
 badges: coverage myvenv
-	$(VENV)/python -m pybadges --left-text=license --right-text=MIT > _static/license.svg
+	$(VENV)/python -m anybadge --label=license --value=MIT --color=#1081c2 -f _static/license.svg -o
 	$(VENV)/coverage-badge -fo _static/coverage.svg

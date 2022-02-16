@@ -4,6 +4,8 @@
 #
 #    pip-compile --output-file=requirements-dev.txt requirements-dev.in requirements-test.in setup.py
 #
+anybadge==1.8.0
+    # via -r requirements-dev.in
 attrs==21.4.0
     # via pytest
 backcall==0.2.0
@@ -72,9 +74,7 @@ ipython==7.31.1
 jedi==0.18.1
     # via ipython
 jinja2==2.11.3
-    # via
-    #   pybadges
-    #   spacy
+    # via spacy
 langcodes==3.3.0
     # via spacy
 makefun==1.13.1
@@ -101,6 +101,7 @@ numpy==1.21.5
     #   thinc
 packaging==21.3
     # via
+    #   anybadge
     #   pytest
     #   spacy
     #   tox
@@ -130,8 +131,6 @@ py==1.11.0
     # via
     #   pytest
     #   tox
-pybadges==2.2.1
-    # via -r requirements-dev.in
 pydantic==1.8.2
     # via
     #   spacy
@@ -149,9 +148,7 @@ pytest-cases==3.6.9
 pytest-cov==3.0.0
     # via -r requirements-test.in
 requests==2.27.1
-    # via
-    #   pybadges
-    #   spacy
+    # via spacy
 scipy==1.7.3
     # via gensim
 six==1.16.0

@@ -128,6 +128,6 @@ To create the documentation run:
            
    tox -e docs
 
-The README file contains badges that are created using `pybadges
-<https://github.com/google/pybadges>`_ and `coverage-badge
+The README file contains badges that are created using `anybadge
+<https://github.com/jongracecox/anybadge>`_ and `coverage-badge
 <https://github.com/dbrgn/coverage-badge>`_.
