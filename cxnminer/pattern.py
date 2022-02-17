@@ -23,6 +23,11 @@ class Pattern(metaclass=abc.ABCMeta):
     def from_element_list(cls, element_list):
         pass # pragma: no cover
 
+    @abc.abstractmethod
+    def get_brat_docdata(self):
+        """Generate doc_data for usage with brat embedded (https://brat.nlplab.org/embed.html)."""
+        pass # pragma: no cover
+
     def get_pattern_profile(self, get_hash=True):
 
         if isinstance(self, TokenPattern):
@@ -237,6 +242,71 @@ class SNGram(Pattern):
         ).replace(" " + self.COMMA, self.COMMA
         ).replace(self.LEFT_BRACKET + " ", self.LEFT_BRACKET
         ).replace(" " + self.RIGHT_BRACKET, self.RIGHT_BRACKET)
+
+    def _get_brat_data(self, head, text_level, entity_start=0):
+
+        entities = []
+        relations = []
+        text = ""
+
+        ## it is a dict
+        if hasattr(head.token, "items"):
+            if text_level in head.token:
+                text += " " + head.token[text_level]
+        ## it is a PatternElement with text_level
+        elif getattr(head.token, "level", None) == text_level:
+            head.token += " " + head.token.form
+        else:
+            head.token += " *"
+
+        entity_end = entity_start + len(text) - 1
+
+        last_entity = len(entities)
+
+        if hasattr(head.token, "items"):
+            for key in head.token:
+                if key != text_level:
+                    entities.append([
+                        key + "_" + str(entity_start),
+                        head.token[key],
+                        [[ entity_start, entity_end ]]
+                    ])
+        ## it is a PatternElement with text_level
+        elif getattr(head.token, "level", None) != text_level:
+            entities.append([
+                head.token.level + "_" + str(entity_start),
+                head.token.form,
+                [[ entity_start, entity_end ]]
+            ])
+
+        ## get first new entity!
+        relation_head = entities[last_entity][0]
+
+        if head.children is not None:
+            for child in head.children:
+                brat_data = self._get_brat_data(child, text_level, entity_start + len(text))
+                entities.extend(brat_data['entities'])
+                text += " " + brat_data['text']
+
+                relation_end = brat_data['entities'][0][0]
+                relations.extend(brat_data['relations'])
+                relations.append([
+                    relation_head + "__" + relation_end,
+                    " ",
+                    [["arg1", relation_head], ["arg2", relation_end]]
+                ])
+
+        # remove first character from string (it is whitespace)
+        return {
+            "entities": entities,
+            "relations": relations,
+            "text": text.lstrip()
+        }
+
+
+    def get_brat_docdata(self, text_level):
+
+        return self._get_brat_data(self.tree, text_level)
 
 
 class TokenSNGram(SNGram, TokenPattern):
