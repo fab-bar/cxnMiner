@@ -866,6 +866,9 @@ def get_top_n_base_patterns(ctx, patterns_file, base_patterns_file, n, outfile, 
 
                 bp = bp_with_examples
 
+                ## add frequency to bp
+                bp = list(map(lambda pattern: pattern + (base_patterns[pattern[0]],), bp))
+
                 content['base_patterns'] = bp
 
                 json.dump([pattern, content], o)
@@ -881,9 +884,14 @@ def get_top_n_base_patterns(ctx, patterns_file, base_patterns_file, n, outfile, 
 @click.argument('infile')
 @click.argument('encoder')
 @click.argument('outfile')
+@click.argument('config')
 @click.option('--string', is_flag=True)
-@click.option('--unknown')
-def decode_pattern_collection(ctx, infile, encoder, outfile, string, unknown):
+@click.option('--skip_unknown', is_flag=True)
+def decode_pattern_collection(ctx, infile, encoder, outfile, config, string, skip_unknown):
+
+    config = open_json_config(config)
+    word_level = config["word_level"]
+    unknown = config["unknown"]
 
     with open_file(encoder, 'rb') as encoder_file:
         pattern_encoder = Base64Encoder(PatternEncoder.load(encoder_file), binary=False)
@@ -906,20 +914,24 @@ def decode_pattern_collection(ctx, infile, encoder, outfile, string, unknown):
                 for base_pattern in base_patterns:
 
                     try:
+                        frequency = None
+                        if len(base_pattern) > 2:
+                            frequency = base_pattern[2]
+
                         examples = []
-                        if len(base_pattern) == 2:
+                        if len(base_pattern) > 1:
                             examples = base_pattern[1]
                             base_pattern = base_pattern[0]
 
                         decoded_pattern = pattern_encoder.decode(base_pattern)
 
-                        if unknown is None or all([element != unknown for element in decoded_pattern.get_element_list()]):
+                        if (not skip_unknown) or (all([element != unknown for element in decoded_pattern.get_element_list()])):
                             if string:
                                 cout_pattern = str(decoded_pattern)
                             else:
                                 cout_pattern = base64.b64encode(pickle.dumps(decoded_pattern)).decode('ascii')
 
-                            decoded_base_patterns.append([cout_pattern, examples])
+                            decoded_base_patterns.append([cout_pattern, examples, decoded_pattern.get_brat_docdata(word_level), frequency])
                     except:
                         ctx.obj['logger'].warning("Could not test pattern for unknown, skipping.")
 

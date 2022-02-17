@@ -135,5 +135,5 @@ the 2 patterns with the highest UIF-PMI value with 1 corresponding instantiation
 
   cxnminer utils get-top-n example_data/example_data_pattern_set_frequent.jsonl example_data/example_data_patterns_stats.json uif-pmi 2 example_data/example_data_pattern_set_top_2_uifpmi.jsonl
   cxnminer utils get-top-n-base-patterns example_data/example_data_pattern_set_top_2_uifpmi.jsonl example_data/example_data_base_pattern_set.jsonl 1 example_data/example_data_pattern_set_top_2_uifpmi_basesel_1.jsonl --example_ids example_data/example_data_pattern_set_top_2_uifpmi_basesel_1_exampleids.json
-  cxnminer utils decode-pattern-collection example_data/example_data_pattern_set_top_2_uifpmi_basesel_1.jsonl example_data/example_data_encoder example_data/example_data_pattern_set_top_2_uifpmi_basesel_1_decoded.jsonl --string 
+  cxnminer utils decode-pattern-collection example_data/example_data_pattern_set_top_2_uifpmi_basesel_1.jsonl example_data/example_data_encoder example_data/example_data_pattern_set_top_2_uifpmi_basesel_1_decoded.jsonl example_data/example_config.json --string 
   cxnminer corpus2sentences example_data/example_data.conllu example_data/sentences --example_ids example_data/example_data_pattern_set_top_2_uifpmi_basesel_1_exampleids.json

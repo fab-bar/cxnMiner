@@ -563,7 +563,8 @@ def test_encode_corpus():
     ('decode-pattern-collection',
      [os.path.abspath('example_data/example_data_pattern_set_top_2_uifpmi_basesel_1.jsonl'), os.path.abspath('example_data/example_data_encoder')],
      os.path.abspath('example_data/example_data_pattern_set_top_2_uifpmi_basesel_1_decoded.jsonl'),
-     ['--string'])
+     ## TODO not really an option but should work!
+     [os.path.abspath('example_data/example_config.json'), '--string'])
 ])
 def test_pattern_extraction_util(command, arguments, expected_outfile, options):
 
