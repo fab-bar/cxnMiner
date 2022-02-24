@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'cxnMiner'
-copyright = '2020-2021, Fabian Barteld'
+copyright = '2020-2022, Fabian Barteld'
 author = 'Fabian Barteld'
 
 
