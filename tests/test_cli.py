@@ -526,6 +526,94 @@ def test_encode_corpus():
 
         assert filecmp.cmp(outfile, expected_outfile_path, shallow=False)
 
+
+@pytest.mark.parametrize("command,arguments,expected_outfile,options", [
+    ('add-pattern-stats',
+     [os.path.abspath('example_data/example_data_pattern_set.jsonl')],
+     os.path.abspath('example_data/example_data_patterns_simple_stats.json'),
+     ['--base_patterns', os.path.abspath('example_data/example_data_base_pattern_set.jsonl')]),
+    ('filter-patterns',
+     [os.path.abspath('example_data/example_data_pattern_set.jsonl'), os.path.abspath('example_data/example_data_patterns_simple_stats.json'), 'frequency', '2'],
+     os.path.abspath('example_data/example_data_pattern_set_frequent.jsonl'),
+     []),
+    ('decode-patterns',
+     [os.path.abspath('example_data/example_data_pattern_set_frequent.jsonl'), os.path.abspath('example_data/example_data_encoder')],
+     os.path.abspath('example_data/example_data_pattern_set_frequent_decoded'),
+     []),
+    ('get-vocabulary-probs',
+     [os.path.abspath('example_data/example_data_dict.json')],
+     os.path.abspath('example_data/example_data_dictionary_probs.json'),
+     []),
+    ('get-pattern-type-freq',
+     [os.path.abspath('example_data/example_data_pattern_set_frequent_decoded'), os.path.abspath('example_data/example_data_patterns_simple_stats.json')],
+     os.path.abspath('example_data/example_data_pattern_set_frequent_type_frequencies.json'),
+     []),
+    ('add-pattern-stats',
+     [os.path.abspath('example_data/example_data_pattern_set_frequent.jsonl')],
+     os.path.abspath('example_data/example_data_patterns_stats.json'),
+     ['--decoded_patterns', os.path.abspath('example_data/example_data_pattern_set_frequent_decoded'), '--config', os.path.abspath('example_data/example_config.json'), '--vocabulary_probs', os.path.abspath('example_data/example_data_dictionary_probs.json'), '--known_stats', os.path.abspath('example_data/example_data_patterns_simple_stats.json'), '--pattern_profile_frequency', os.path.abspath('example_data/example_data_pattern_set_frequent_type_frequencies.json')]),
+    ('get-top-n',
+     [os.path.abspath('example_data/example_data_pattern_set_frequent.jsonl'), os.path.abspath('example_data/example_data_patterns_stats.json'), 'uif-pmi', '2'],
+     os.path.abspath('example_data/example_data_pattern_set_top_2_uifpmi.jsonl'),
+     []),
+    ('get-top-n-base-patterns',
+     [os.path.abspath('example_data/example_data_pattern_set_top_2_uifpmi.jsonl'), os.path.abspath('example_data/example_data_base_pattern_set.jsonl'), '1'],
+     os.path.abspath('example_data/example_data_pattern_set_top_2_uifpmi_basesel_1.jsonl'),
+     ['--example_ids', os.path.abspath('example_data/example_data_pattern_set_top_2_uifpmi_basesel_1_exampleids.json')]),
+    ('decode-pattern-collection',
+     [os.path.abspath('example_data/example_data_pattern_set_top_2_uifpmi_basesel_1.jsonl'), os.path.abspath('example_data/example_data_encoder')],
+     os.path.abspath('example_data/example_data_pattern_set_top_2_uifpmi_basesel_1_decoded.jsonl'),
+     ['--string'])
+])
+def test_pattern_extraction_util(command, arguments, expected_outfile, options):
+
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+
+        outfile_path = "example_data_extraction_util_result"
+
+        runner.invoke(main,
+                      [
+                          'utils',
+                          command
+                      ] +
+                      arguments +
+                      [ outfile_path ] +
+                      options
+        )
+
+        assert filecmp.cmp(outfile_path, expected_outfile, shallow=False)
+
+
+def test_corpus2sentences():
+
+    infile_path = os.path.abspath('example_data/example_data.conllu')
+    example_ids_path = os.path.abspath('example_data/example_data_pattern_set_top_2_uifpmi_basesel_1_exampleids.json')
+    expected_outpath = os.path.abspath('example_data/sentences')
+
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+
+        outfolder = "example_sentences"
+
+        result = runner.invoke(main, [
+            'corpus2sentences',
+            infile_path,
+            outfolder,
+            '--example_ids', example_ids_path
+        ])
+
+        print(result.exception)
+        print(result.output)
+
+
+        dir_comparator = filecmp.dircmp(outfolder, expected_outpath)
+        assert not dir_comparator.left_only
+        assert not dir_comparator.right_only
+        assert not dir_comparator.diff_files
+        assert not dir_comparator.funny_files
+
+
 ############################ tests for scripts in bin
 
 def test_filter_vocabulary():
