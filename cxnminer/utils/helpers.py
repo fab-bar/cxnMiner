@@ -24,10 +24,16 @@ class MultiprocessMap(object):
         else:
             return lambda x,y: map(x, y)
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, exception_type, exception_value, traceback):
 
         if self.pool is not None:
-            self.pool.__exit__(type, value, traceback)
+
+            if exception_type is not None:
+                ## let the pools __exit__ method handle exceptions
+                return self.pool.__exit__(exception_type, exception_value, traceback)
+
+            self.pool.close()
+            self.pool.join()
 
 
 
