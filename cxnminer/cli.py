@@ -844,7 +844,7 @@ def get_top_n_base_patterns(ctx, patterns_file, base_patterns_file, n, outfile, 
                 bp = content['base_patterns']
 
                 if len(bp) > n:
-                    bp = sorted(bp, key=lambda pattern: base_patterns[pattern], reverse=True)[:n]
+                    bp = sorted(set(bp), key=lambda pattern: base_patterns[pattern], reverse=True)[:n]
 
                 bp_set = set(bp)
                 bp_with_examples = []
