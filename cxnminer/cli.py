@@ -12,6 +12,7 @@ import math
 import os
 import os.path
 import pickle
+import random
 
 import click
 import conllu
@@ -822,7 +823,8 @@ def get_top_n(ctx, patterns_file, pattern_stats_file, stat, n, outfile):
 @click.argument('n', type=int)
 @click.argument('outfile')
 @click.option('--example_ids')
-def get_top_n_base_patterns(ctx, patterns_file, base_patterns_file, n, outfile, example_ids):
+@click.option('--n_examples', default=5)
+def get_top_n_base_patterns(ctx, patterns_file, base_patterns_file, n, outfile, example_ids, n_examples):
 
     with open_file(base_patterns_file) as infile:
 
@@ -852,13 +854,15 @@ def get_top_n_base_patterns(ctx, patterns_file, base_patterns_file, n, outfile, 
                         bpattern, sentences = json.loads(baseline)
                         if bpattern in bp_set:
                             examples = [json.loads(sentence) for sentence in sentences]
+                            if len(examples) > n_examples:
+                                examples = random.sample(examples, n_examples)
                             # I have added 1 to the id
                             for example in examples:
                                 example[0] = example[0] - 1
                             bp_with_examples.append((bpattern, examples))
                             bp_example_ids.update(set([sentence[0] for sentence in examples]))
 
-                            ## stop sanning base pattern file if I have all base patterns
+                            ## stop scanning base pattern file if I have all base patterns
                             bp_set.remove(bpattern)
                             if not bp_set:
                                 break
